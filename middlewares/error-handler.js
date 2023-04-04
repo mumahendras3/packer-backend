@@ -9,6 +9,11 @@ function errorHandler(err, req, res, next) {
     const { message } = err.errors[field];
     return res.status(400).json({ message });
   }
+  if (err.name === 'InvalidCredentials') {
+    return res.status(401).json({
+      message: 'Invalid email/password'
+    });
+  }
   console.error(err);
   res.status(500).json({ message: 'Internal server error' });
 }

@@ -12,8 +12,7 @@ const userSchema = new Schema({
   password: {
     type: String,
     required: [true, 'Password is required']
-  },
-  githubAccessToken: String
+  }
 });
 
 userSchema.pre('save', function (next) {
