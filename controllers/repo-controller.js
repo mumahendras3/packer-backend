@@ -49,6 +49,36 @@ class RepoController {
       next(err);
     }
   }
+
+  static async updateVersion(req, res, next) {
+    try {
+      const { id } = req.loggedInUser;
+      const { authorization } = req.headers;
+      // Get all the repos in this user's watch list
+      const user = await User.findById(id)
+        .populate('watchList')
+        .select('watchList');
+      // Check for update for all of these repos
+      for (const repo of user.watchList) {
+        const axiosOptions = {
+          method: 'GET',
+          url: repo.githubReleasesEndpoint + '?per_page=1'
+        };
+        if (authorization)
+          axiosOptions.headers = { authorization };
+        const { data } = await axios(axiosOptions);
+        if (repo.latestVersion !== data[0].name) {
+          repo.latestVersion = data[0].name;
+          await repo.save();
+        }
+      }
+      res.status(200).json({
+        message: 'All repos successfully checked for update'
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = RepoController;

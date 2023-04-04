@@ -11,6 +11,7 @@
 
 1. [`GET /repos`](#get-repos)
 1. [`POST /repos`](#post-repos)
+1. [`PATCH /repos`](#patch-repos)
 
 ## POST /register
 
@@ -165,6 +166,35 @@ Response:
 OR
 {
   "message": "No releases found for this repo"
+}
+```
+
+## PATCH /repos
+
+Description: Check for update for all repos in the authenticated user's watch list
+
+Note: Even if there aren't any updates available for all of the repos, the response
+      of this endpoint will still be a success since the process of checking for
+      updates itself is a success.
+
+Request:
+
+- headers:
+
+```json
+{
+  "access_token": "<jwt_token>",
+  "authorization": "<github access token>" // optional
+}
+```
+
+Response:
+
+- *200 - OK*:
+
+```json
+{
+  "message": "All repos successfully checked for update"
 }
 ```
 
