@@ -1,6 +1,6 @@
 const mongoose = require('../config/connection');
-const { hashPassword } = require('../helpers/bcrypt');
 const { Schema } = mongoose;
+const { hashPassword } = require('../helpers/bcrypt');
 
 const userSchema = new Schema({
   email: {
@@ -12,12 +12,14 @@ const userSchema = new Schema({
   password: {
     type: String,
     required: [true, 'Password is required']
-  }
+  },
+  watchList: [{ type: Schema.Types.ObjectId, ref: 'Repo' }]
 });
 
 userSchema.pre('save', function (next) {
-  this.password = hashPassword(this.password);
-  this.githubAccessToken = hashPassword(this.githubAccessToken);
+  if (this.password) {
+    this.password = hashPassword(this.password);
+  }
   next();
 });
 

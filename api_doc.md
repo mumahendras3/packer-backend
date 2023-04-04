@@ -2,8 +2,15 @@
 
 ## Endpoint List
 
+### Public
+
 1. [`POST /register`](#post-register)
 1. [`POST /login`](#post-login)
+
+### Access Token Required
+
+1. [`GET /repos`](#get-repos)
+1. [`POST /repos`](#post-repos)
 
 ## POST /register
 
@@ -76,7 +83,7 @@ Response:
 }
 ```
 
-- *400 Bad Request*:
+- *400 - Bad Request*:
 
 ```json
 {
@@ -88,10 +95,84 @@ OR
 }
 ```
 
-- *401 Unauthorized*:
+- *401 - Unauthorized*:
 
 ```json
 {
   "message": "Invalid email/password"
+}
+```
+
+## GET /repos
+
+Description: List all repos in the authenticated user's watch list
+
+Request:
+
+- headers:
+
+```json
+{
+  "access_token": "<jwt_token>"
+}
+```
+
+Response:
+
+- *200 - OK*:
+
+```json
+[
+  {
+    "_id": "642be7f19088def1c5e63489",
+    "name": "Mailspring",
+    "ownerName": "Foundry376"
+  }
+]
+```
+
+## POST /repos
+
+Description: Add a new repo to the authenticated user's watch list
+
+Request:
+
+- headers:
+
+```json
+{
+  "access_token": "<jwt_token>"
+}
+```
+
+Response:
+
+- *201 - Created*:
+
+```json
+{
+  "message": "Repo successfully added"
+}
+```
+
+## Global Error Responses
+
+### When the user is not authenticated
+
+- *401 - Unauthorized*:
+
+```json
+{
+  "message": "Invalid token"
+}
+```
+
+### Catch all error
+
+- *500 - Internal Server Error*:
+
+```json
+{
+  "message": "Internal server error"
 }
 ```
