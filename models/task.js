@@ -19,6 +19,14 @@ const taskSchema = new Schema({
   containerImage: {
     type: String,
     required: [true, 'Container Image is required']
+  },
+  containerId: String,
+  status: {
+    type: String,
+    enum: {
+      values: ['Running', 'Fail', 'Success'],
+      message: 'Unknown status: {VALUE}'
+    }
   }
 });
 
