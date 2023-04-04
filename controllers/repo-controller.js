@@ -49,7 +49,8 @@ class RepoController {
       user.watchList.push(repo._id);
       await user.save();
       res.status(201).json({
-        message: 'Repo successfully added'
+        message: 'Repo successfully added',
+        id: repo._id
       });
     } catch (err) {
       // When the repo doesn't have any releases

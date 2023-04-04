@@ -12,6 +12,7 @@
 1. [`GET /repos`](#get-repos)
 1. [`POST /repos`](#post-repos)
 1. [`PATCH /repos`](#patch-repos)
+1. [`GET /tasks`](#get-tasks)
 
 ## POST /register
 
@@ -153,7 +154,8 @@ Response:
 
 ```json
 {
-  "message": "Repo successfully added"
+  "message": "Repo successfully added",
+  "id": "<ObjectId>"
 }
 ```
 
@@ -203,6 +205,100 @@ Response:
 ```json
 {
   "message": "All repos successfully checked for update"
+}
+```
+
+## GET /tasks
+
+Description: Get all previously created tasks
+
+Request:
+
+- headers:
+
+```json
+{
+  "access_token": "<jwt_token>"
+}
+```
+
+Response:
+
+- *200 - OK*:
+
+```json
+[
+  {
+    "_id": "642c5f80252e3c469deafac2",
+    "repo": {
+      "_id": "642c3cb56e786897e40aa78b",
+      "name": "Mailspring",
+      "ownerName": "Foundry376",
+      "currentVersion": "1.10.7",
+      "latestVersion": "1.10.8"
+    },
+    "releaseAsset": "mailspring-1.10.8-amd64.deb",
+    "additionalFiles": [],
+    "runCommand": "./build.sh",
+    "containerImage": "vbatts/slackware:latest"
+  }
+  ...
+]
+```
+
+## POST /tasks
+
+Description: Add a new task
+
+Request:
+
+- headers:
+
+```json
+{
+  "access_token": "<jwt_token>"
+}
+```
+
+- body:
+
+```json
+{
+  "repo": "string (ObjectId)",
+  "releaseAsset": "string",
+  "runCommand": "string",
+  "containerImage": "string"
+}
+```
+
+Response:
+
+- *201 - Created*:
+
+```json
+{
+  "message": "Task successfully added",
+  "id": "<ObjectId>"
+}
+```
+
+- *400 - Bad Request*:
+
+```json
+{
+  "message": "Repo is required"
+}
+OR
+{
+  "message": "Release asset is required"
+}
+OR
+{
+  "message": "Run command is required"
+}
+OR
+{
+  "message": "Container Image is required"
 }
 ```
 
