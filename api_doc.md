@@ -141,7 +141,8 @@ Request:
 
 ```json
 {
-  "access_token": "<jwt_token>"
+  "access_token": "<jwt_token>",
+  "authorization": "<github access token>" // optional
 }
 ```
 
@@ -152,6 +153,18 @@ Response:
 ```json
 {
   "message": "Repo successfully added"
+}
+```
+
+- *400 - Bad Request*:
+
+```json
+{
+  "message": "Repo already exists"
+}
+OR
+{
+  "message": "No releases found for this repo"
 }
 ```
 

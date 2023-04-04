@@ -9,6 +9,22 @@ const repoSchema = new Schema({
   ownerName: {
     type: String,
     required: [true, 'Owner name is required']
+  },
+  currentVersion: {
+    type: String,
+    required: [true, 'Current Version is required']
+  },
+  latestVersion: {
+    type: String,
+    required: [true, 'Latest Version is required']
+  }
+}, {
+  virtuals: {
+    githubReleasesEndpoint: {
+      get() {
+        return `https://api.github.com/repos/${this.ownerName}/${this.name}/releases`;
+      }
+    }
   }
 });
 
