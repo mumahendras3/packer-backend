@@ -161,6 +161,14 @@ Response:
 
 ```json
 {
+  "message": "Repo name is required"
+}
+OR
+{
+  "message": "Repo owner name is required"
+}
+OR
+{
   "message": "Repo already exists"
 }
 OR

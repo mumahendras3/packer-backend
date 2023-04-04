@@ -20,6 +20,10 @@ class RepoController {
       const { id } = req.loggedInUser;
       const { authorization } = req.headers;
       const { name, ownerName } = req.body;
+      if (!name)
+        throw { errors: { repo: { message: 'Repo name is required' } } };
+      if (!ownerName)
+        throw { errors: { repo: { message: 'Repo owner name is required' } } };
       // Avoid duplicates
       const existingRepo = await Repo.findOne({ name, ownerName });
       if (existingRepo)
@@ -29,14 +33,16 @@ class RepoController {
       // Get the latest version for this repo
       const axiosOptions = {
         method: 'GET',
-        url: repo.githubReleasesEndpoint + '?per_page=1'
+        url: repo.githubReleasesEndpoint + '/latest',
+        headers: {
+          accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
       };
       if (authorization)
-        axiosOptions.headers = { authorization };
+        axiosOptions.headers.authorization = authorization;
       const { data } = await axios(axiosOptions);
-      if (data.length < 1)
-        throw { errors: { repo: { message: 'No releases found for this repo' } } };
-      repo.latestVersion = repo.currentVersion = data[0].name;
+      repo.latestVersion = repo.currentVersion = data.name;
       await repo.save();
       // Add this repo to the logged-in user's watch list
       const user = await User.findById(id);
@@ -46,6 +52,16 @@ class RepoController {
         message: 'Repo successfully added'
       });
     } catch (err) {
+      // When the repo doesn't have any releases
+      if (err.response.data.message === 'Not Found') {
+        return next({
+          errors: {
+            repo: {
+              message: 'No releases found for this repo'
+            }
+          }
+        });
+      }
       next(err);
     }
   }
@@ -62,13 +78,17 @@ class RepoController {
       for (const repo of user.watchList) {
         const axiosOptions = {
           method: 'GET',
-          url: repo.githubReleasesEndpoint + '?per_page=1'
+          url: repo.githubReleasesEndpoint + '/latest',
+          headers: {
+            accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28'
+          }
         };
         if (authorization)
-          axiosOptions.headers = { authorization };
+          axiosOptions.headers.authorization = authorization;
         const { data } = await axios(axiosOptions);
-        if (repo.latestVersion !== data[0].name) {
-          repo.latestVersion = data[0].name;
+        if (repo.latestVersion !== data.name) {
+          repo.latestVersion = data.name;
           await repo.save();
         }
       }
