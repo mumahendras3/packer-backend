@@ -14,8 +14,15 @@ function errorHandler(err, req, res, next) {
       message: 'Invalid email/password'
     });
   }
+  if (err.name === 'InvalidToken' || err.name === 'JsonWebTokenError') {
+    return res.status(401).json({
+      message: 'Invalid token'
+    });
+  }
   console.error(err);
-  res.status(500).json({ message: 'Internal server error' });
+  res.status(500).json({
+    message: 'Internal server error'
+  });
 }
 
 module.exports = errorHandler;
