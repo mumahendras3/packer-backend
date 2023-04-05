@@ -138,6 +138,21 @@ class TaskController {
       next(err);
     }
   }
+
+  static async deleteTask(req, res, next) {
+    try {
+      const { id } = req.params;
+      const task = await Task.findByIdAndDelete(id).select('-__v');
+      if (!task)
+        throw { name: 'TaskNotFound' };
+      res.status(200).json({
+        message: 'Task successfully deleted',
+        removedTask: task
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = TaskController;

@@ -24,6 +24,11 @@ function errorHandler(err, req, res, next) {
       message: 'Repository not found in the watch list'
     });
   }
+  if (err.name === 'TaskNotFound') {
+    return res.status(404).json({
+      message: 'Task not found'
+    });
+  }
   console.error(err);
   res.status(500).json({
     message: 'Internal server error'
