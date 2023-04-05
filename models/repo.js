@@ -17,7 +17,8 @@ const repoSchema = new Schema({
   latestVersion: {
     type: String,
     required: [true, 'Latest Version is required']
-  }
+  },
+  latestReleaseAssets: [{ name: String, url: String }]
 }, {
   virtuals: {
     githubReleasesEndpoint: {

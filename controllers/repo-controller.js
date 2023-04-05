@@ -59,6 +59,10 @@ class RepoController {
         axiosOptions.headers.authorization = authorization;
       const { data } = await axios(axiosOptions);
       repo.latestVersion = repo.currentVersion = data.name;
+      repo.latestReleaseAssets = data.assets.map(asset => ({
+        name: asset.name,
+        url: asset.browser_download_url
+      }));
       await repo.save();
       // Add this repo to the logged-in user's watch list
       user.watchList.push(repo._id);

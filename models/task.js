@@ -23,8 +23,9 @@ const taskSchema = new Schema({
   containerId: String,
   status: {
     type: String,
+    default: 'Created',
     enum: {
-      values: ['Running', 'Failed', 'Succeeded'],
+      values: ['Created', 'Running', 'Failed', 'Succeeded'],
       message: 'Unknown status: {VALUE}'
     }
   }
