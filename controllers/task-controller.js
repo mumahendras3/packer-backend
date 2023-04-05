@@ -92,7 +92,12 @@ class TaskController {
   static async checkTask(req, res, next) {
     try {
       const { id } = req.params;
-      const task = await Task.findById(id).select('-__v');
+      const task = await Task.findById(id)
+        .populate('additionalFiles', '-__v')
+        .select('-__v');
+      if (!task.containerId) {
+        return res.status(200).json(task);
+      }
       const { data } = await axios({
         method: 'GET',
         url: process.env.DOCKER_ENGINE_URL + `/containers/${task.containerId}/json`
@@ -116,8 +121,6 @@ class TaskController {
         }
         await task.save();
       }
-      // We don't need this field for the client so delete it
-      delete task.__v;
       res.status(200).json(task);
     } catch (err) {
       next(err);
