@@ -5,11 +5,8 @@ const User = require("../models/user");
 class UserController {
   static async register(req, res, next) {
     try {
-      console.log('Hello! I\'m running!');
       const { email, password } = req.body;
-      // console.log({ email, password, githubAccessToken });
       const user = new User({ email, password });
-      console.log(user);
       await user.save();
       res.status(201).json({
         message: 'Registration successful',
