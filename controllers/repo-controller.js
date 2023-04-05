@@ -7,7 +7,7 @@ class RepoController {
     try {
       const { id } = req.loggedInUser;
       const user = await User.findById(id)
-        .populate('watchList', 'name ownerName')
+        .populate('watchList', '-__v')
         .select('watchList');
       res.status(200).json(user.watchList);
     } catch (err) {
