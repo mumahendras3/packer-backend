@@ -103,25 +103,37 @@ class TaskController {
         url: process.env.DOCKER_ENGINE_URL + `/containers/${task.containerId}/json`
       });
       if (data.State.Status === 'exited') {
-        // The task exited, perform some cleanups
-        const response = await axios({
-          method: 'DELETE',
-          url: process.env.DOCKER_ENGINE_URL + `/containers/${task.containerId}`
-        });
-        if (response.status !== 204)
-          throw { name: 'InternalServerError' };
-        // This is not valid anymore, so clean it up
-        task.containerId = undefined;
+        // The container has exited, update the task status accordingly
         if (data.State.ExitCode === 0) {
-          // The task succeeded, update database data accordingly
+          // The task succeeded
           task.status = 'Succeeded';
         } else {
-          // The task failed, update database data accordingly
+          // The task failed
           task.status = 'Failed';
         }
         await task.save();
       }
       res.status(200).json(task);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getTaskLogs(req, res, next) {
+    try {
+      const { id } = req.params;
+      const task = await Task.findById(id);
+      const response = await axios({
+        method: 'GET',
+        url: process.env.DOCKER_ENGINE_URL + `/containers/${task.containerId}/logs?stdout=true&stderr=true`,
+        headers: {
+          Accept: 'application/vnd.docker.multiplexed-stream'
+        }
+      });
+      if (response.status !== 200)
+        throw { response };
+      res.set('Content-Type', 'application/vnd.docker.multiplexed-stream');
+      res.status(response.status).send(response.data);
     } catch (err) {
       next(err);
     }

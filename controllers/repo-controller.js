@@ -51,7 +51,7 @@ class RepoController {
         method: 'GET',
         url: repo.githubReleasesEndpoint + '/latest',
         headers: {
-          accept: 'application/vnd.github+json',
+          Accept: 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28'
         }
       };
@@ -104,7 +104,7 @@ class RepoController {
           method: 'GET',
           url: repo.githubReleasesEndpoint + '/latest',
           headers: {
-            accept: 'application/vnd.github+json',
+            Accept: 'application/vnd.github+json',
             'X-GitHub-Api-Version': '2022-11-28'
           }
         };
