@@ -24,7 +24,7 @@ const taskSchema = new Schema({
   status: {
     type: String,
     enum: {
-      values: ['Running', 'Fail', 'Success'],
+      values: ['Running', 'Failed', 'Succeeded'],
       message: 'Unknown status: {VALUE}'
     }
   }

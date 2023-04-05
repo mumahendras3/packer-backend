@@ -66,6 +66,41 @@ class TaskController {
       next(err);
     }
   }
+
+  static async checkTask(req, res, next) {
+    try {
+      const { id } = req.params;
+      const task = await Task.findById(id).select('-__v');
+      const { data } = await axios({
+        method: 'GET',
+        url: process.env.DOCKER_ENGINE_URL + `/containers/${task.containerId}/json`
+      });
+      if (data.State.Status === 'exited') {
+        // The task exited, perform some cleanups
+        const response = await axios({
+          method: 'DELETE',
+          url: process.env.DOCKER_ENGINE_URL + `/containers/${task.containerId}`
+        });
+        if (response.status !== 204)
+          throw { name: 'InternalServerError' };
+        // This is not valid anymore, so clean it up
+        task.containerId = undefined;
+        if (data.State.ExitCode === 0) {
+          // The task succeeded, update database data accordingly
+          task.status = 'Succeeded';
+        } else {
+          // The task failed, update database data accordingly
+          task.status = 'Failed';
+        }
+        await task.save();
+      }
+      // We don't need this field for the client so delete it
+      delete task.__v;
+      res.status(200).json(task);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = TaskController;
