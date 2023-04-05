@@ -24,10 +24,26 @@ class RepoController {
         throw { errors: { repo: { message: 'Repo name is required' } } };
       if (!ownerName)
         throw { errors: { repo: { message: 'Repo owner name is required' } } };
+      // Get the user's data
+      const user = await User.findById(id).populate('watchList');
       // Avoid duplicates
       const existingRepo = await Repo.findOne({ name, ownerName });
-      if (existingRepo)
-        throw { errors: { repo: { message: 'Repo already exists' } } };
+      if (existingRepo) {
+        // Add this repo to the logged-in user's watch list (avoiding duplicates)
+        if (
+          user.watchList.find(repo => {
+            return repo.name === existingRepo.name && repo.ownerName === existingRepo.ownerName
+          })
+        ) {
+          throw { errors: { repo: { message: 'Repo already exists' } } };
+        }
+        user.watchList.push(existingRepo._id);
+        await user.save();
+        return res.status(201).json({
+          message: 'Repo successfully added',
+          id: existingRepo._id
+        });
+      };
       // Create a new Repo document
       const repo = new Repo({ name, ownerName });
       // Get the latest version for this repo
@@ -45,7 +61,6 @@ class RepoController {
       repo.latestVersion = repo.currentVersion = data.name;
       await repo.save();
       // Add this repo to the logged-in user's watch list
-      const user = await User.findById(id);
       user.watchList.push(repo._id);
       await user.save();
       res.status(201).json({
@@ -54,14 +69,18 @@ class RepoController {
       });
     } catch (err) {
       // When the repo doesn't have any releases
-      if (err.response.data.message === 'Not Found') {
-        return next({
-          errors: {
-            repo: {
-              message: 'No releases found for this repo'
-            }
+      if (err.response) {
+        if (err.response.status === 404) {
+          if (err.response.data.message === 'Not Found') {
+            return next({
+              errors: {
+                repo: {
+                  message: 'No releases found for this repo'
+                }
+              }
+            });
           }
-        });
+        }
       }
       next(err);
     }
