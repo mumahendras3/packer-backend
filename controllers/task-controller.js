@@ -1,4 +1,6 @@
 const { default: axios } = require("axios");
+const fs = require('fs/promises');
+const tar = require('tar');
 const Task = require("../models/task");
 
 class TaskController {
@@ -40,7 +42,7 @@ class TaskController {
   static async startTask(req, res, next) {
     try {
       const { id } = req.params;
-      const task = await Task.findById(id);
+      const task = await Task.findById(id).populate('additionalFiles');
       const { data: { Id: containerId } } = await axios({
         method: 'POST',
         url: process.env.DOCKER_ENGINE_URL + '/containers/create',
@@ -49,9 +51,29 @@ class TaskController {
         },
         data: {
           Image: task.containerImage,
-          Cmd: ['/bin/sh', '-c', task.runCommand]
+          Cmd: ['sh', '-c', task.runCommand],
+          WorkingDir: '/task'
         }
       });
+      // Before we start the container, upload all the necessary files to the container
+      if (task.additionalFiles.length) {
+        await tar.c({
+          gzip: true,
+          file: `files/for-${containerId}.tgz`,
+          cwd: 'files'
+        }, task.additionalFiles.map(file => file.name));
+        const file = await fs.readFile(`files/for-${containerId}.tgz`);
+        await axios({
+          method: 'PUT',
+          url: `${process.env.DOCKER_ENGINE_URL}/containers/${containerId}/archive?path=task`,
+          headers: {
+            'Content-Type': 'application/x-tar'
+          },
+          data: file
+        });
+        // Cleanup the file since it's already sent
+        await fs.unlink(`files/for-${containerId}.tgz`);
+      }
       const response = await axios({
         method: 'POST',
         url: process.env.DOCKER_ENGINE_URL + `/containers/${containerId}/start`,
