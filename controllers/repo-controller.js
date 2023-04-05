@@ -123,6 +123,21 @@ class RepoController {
       next(err);
     }
   }
+
+  static async deleteRepo(req, res, next) {
+    try {
+      const { id } = req.params;
+      const repo = await Repo.findByIdAndDelete(id).select('-__v');
+      if (!repo)
+        throw { name: 'RepoNotFound' };
+      res.status(200).json({
+        message: 'Repository successfully removed from the watch list',
+        removedRepo: repo
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = RepoController;

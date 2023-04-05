@@ -19,6 +19,11 @@ function errorHandler(err, req, res, next) {
       message: 'Invalid token'
     });
   }
+  if (err.name === 'RepoNotFound') {
+    return res.status(404).json({
+      message: 'Repository not found in the watch list'
+    });
+  }
   console.error(err);
   res.status(500).json({
     message: 'Internal server error'
