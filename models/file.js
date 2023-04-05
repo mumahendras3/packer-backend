@@ -10,9 +10,13 @@ const fileSchema = new Schema({
     type: String,
     required: [true, 'Path is required']
   },
+  mimeType: {
+    type: String,
+    required: [true, 'MIME Type is required']
+  },
   extract: {
     type: Boolean,
-    required: [true, 'Extract is required']
+    default: false
   }
 });
 
