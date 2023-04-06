@@ -2,6 +2,7 @@ const { default: axios } = require("axios");
 const fs = require('fs/promises');
 const tar = require('tar');
 const Task = require("../models/task");
+const download = require("../helpers/download");
 
 class TaskController {
   static async listTasks(req, res, next) {
@@ -42,7 +43,24 @@ class TaskController {
   static async startTask(req, res, next) {
     try {
       const { id } = req.params;
-      const task = await Task.findById(id).populate('additionalFiles');
+      const task = await Task.findById(id).populate('repo additionalFiles');
+      // Before we create the container, make sure the image exists locally
+      let response = await axios({
+        method: 'GET',
+        url: process.env.DOCKER_ENGINE_URL + `/images/json?filters={"reference":["${task.containerImage}"]}`
+      });
+      if (response.status === 200 && response.data.length < 1) {
+        // The container image doesn't exist locally, pulling them first
+        response = await axios({
+          method: 'POST',
+          url: process.env.DOCKER_ENGINE_URL + `/images/create?fromImage=${encodeURIComponent(task.containerImage)}`,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.status !== 200)
+          throw { response };
+      }
       const { data: { Id: containerId } } = await axios({
         method: 'POST',
         url: process.env.DOCKER_ENGINE_URL + '/containers/create',
@@ -56,25 +74,31 @@ class TaskController {
         }
       });
       // Before we start the container, upload all the necessary files to the container
+      const { url: releaseAssetUrl } = task.repo.latestReleaseAssets.find(asset => asset.name === task.releaseAsset);
+      // Download the release asset
+      await download(releaseAssetUrl);
+      const filesToUpload = [task.releaseAsset];
       if (task.additionalFiles.length) {
-        await tar.c({
-          gzip: true,
-          file: `files/for-${containerId}.tgz`,
-          cwd: 'files'
-        }, task.additionalFiles.map(file => file.name));
-        const file = await fs.readFile(`files/for-${containerId}.tgz`);
-        await axios({
-          method: 'PUT',
-          url: `${process.env.DOCKER_ENGINE_URL}/containers/${containerId}/archive?path=task`,
-          headers: {
-            'Content-Type': 'application/x-tar'
-          },
-          data: file
-        });
-        // Cleanup the file since it's already sent
-        await fs.unlink(`files/for-${containerId}.tgz`);
+        filesToUpload.push(...task.additionalFiles.map(file => file.name));
       }
-      const response = await axios({
+      await tar.c({
+        gzip: true,
+        file: `files/for-${containerId}.tgz`,
+        cwd: 'files'
+      }, filesToUpload);
+      const file = await fs.readFile(`files/for-${containerId}.tgz`);
+      await axios({
+        method: 'PUT',
+        url: `${process.env.DOCKER_ENGINE_URL}/containers/${containerId}/archive?path=${encodeURIComponent('/task')}`,
+        headers: {
+          'Content-Type': 'application/x-tar'
+        },
+        data: file
+      });
+      // Cleanup the file since it's already sent
+      await fs.unlink(`files/for-${containerId}.tgz`);
+      // Start the container
+      response = await axios({
         method: 'POST',
         url: process.env.DOCKER_ENGINE_URL + `/containers/${containerId}/start`,
       });
@@ -134,6 +158,21 @@ class TaskController {
         throw { response };
       res.set('Content-Type', 'application/vnd.docker.multiplexed-stream');
       res.status(response.status).send(response.data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async deleteTask(req, res, next) {
+    try {
+      const { id } = req.params;
+      const task = await Task.findByIdAndDelete(id).select('-__v');
+      if (!task)
+        throw { name: 'TaskNotFound' };
+      res.status(200).json({
+        message: 'Task successfully deleted',
+        removedTask: task
+      });
     } catch (err) {
       next(err);
     }
