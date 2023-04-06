@@ -4,7 +4,7 @@ const axios = require('axios');
 
 async function download(url) {
   const fileName = path.basename(url);
-  const filePath = path.resolve(__dirname, 'files', fileName)
+  const filePath = path.resolve('files', fileName)
   const writer = fs.createWriteStream(filePath)
 
   const response = await axios({
