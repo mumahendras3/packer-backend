@@ -3,6 +3,7 @@ const fs = require('fs/promises');
 const tar = require('tar');
 const Task = require("../models/task");
 const download = require("../helpers/download");
+const Repo = require("../models/repo");
 
 class TaskController {
   static async listTasks(req, res, next) {
@@ -135,6 +136,11 @@ class TaskController {
         if (data.State.ExitCode === 0) {
           // The task succeeded
           task.status = 'Succeeded';
+          // Update the local version of the repo associated with this task to the
+          // latest one
+          const repo = await Repo.findById(task.repo._id);
+          repo.currentVersion = repo.latestVersion;
+          await repo.save();
         } else {
           // The task failed
           task.status = 'Failed';
