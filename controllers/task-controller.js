@@ -44,6 +44,8 @@ class TaskController {
     try {
       const { id } = req.params;
       const task = await Task.findById(id).populate('repo additionalFiles');
+      if (!task)
+        throw { name: 'TaskNotFound' };
       // Before we create the container, make sure the image exists locally
       let response = await axios({
         method: 'GET',
@@ -119,6 +121,8 @@ class TaskController {
       const task = await Task.findById(id)
         .populate('additionalFiles', '-__v')
         .select('-__v');
+      if (!task)
+        throw { name: 'TaskNotFound' };
       if (!task.containerId) {
         return res.status(200).json(task);
       }
@@ -147,6 +151,8 @@ class TaskController {
     try {
       const { id } = req.params;
       const task = await Task.findById(id);
+      if (!task)
+        throw { name: 'TaskNotFound' };
       const response = await axios({
         method: 'GET',
         url: process.env.DOCKER_ENGINE_URL + `/containers/${task.containerId}/logs?stdout=true&stderr=true`,
