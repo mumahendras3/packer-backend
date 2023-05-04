@@ -2,6 +2,11 @@ const mongoose = require('../config/connection');
 const { Schema } = mongoose;
 
 const taskSchema = new Schema({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'User is required']
+  },
   repo: {
     type: Schema.Types.ObjectId,
     ref: 'Repo',
