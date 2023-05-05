@@ -127,9 +127,16 @@ class RepoController {
   static async deleteRepo(req, res, next) {
     try {
       const { id } = req.params;
+      const { id: userId } = req.loggedInUser;
       const repo = await Repo.findByIdAndDelete(id).select('-__v');
       if (!repo)
         throw { name: 'RepoNotFound' };
+      // Get the logged-in user's watch list
+      const user = await User.findById(userId).select('watchList');
+      // Also remove this repo from the user's watch list
+      user.watchList = user.watchList.filter(repoObjectId => repoObjectId.toString() !== id);
+      // Save the change to the database
+      await user.save();
       res.status(200).json({
         message: 'Repository successfully removed from the watch list',
         removedRepo: repo
