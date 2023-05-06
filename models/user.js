@@ -14,6 +14,7 @@ const userSchema = new Schema({
     required: [true, 'Password is required'],
     select: false
   },
+  name: String,
   watchList: [{ type: Schema.Types.ObjectId, ref: 'Repo' }]
 });
 
