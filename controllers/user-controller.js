@@ -30,7 +30,11 @@ class UserController {
         throw { name: 'InvalidCredentials' };
       const payload = { id: user._id };
       const access_token = signToken(payload);
-      res.status(200).json({ access_token });
+      res.status(200).json({
+        access_token,
+        name: user.name,
+        email: user.email
+      });
     } catch (err) {
       next(err);
     }
