@@ -4,7 +4,7 @@
   "description": "This is the server side of Packer, a client-server software suite for helping a package maintainer keep track of the latest version of the software they are packaging and also perform some automated tasks like building and testing the package in a docker container for a clean and reproducible environment.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --coverage",
     "dev": "npx nodemon index.js"
   },
   "author": "mumahendras3",
@@ -24,6 +24,8 @@
     "tar": "^6.1.13"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.22",
+    "supertest": "^6.3.3"
   }
 }
