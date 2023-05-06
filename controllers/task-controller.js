@@ -18,6 +18,7 @@ class TaskController {
 
   static async addTask(req, res, next) {
     try {
+      const { id: userId } = req.loggedInUser;
       const {
         repo,
         releaseAsset,
@@ -26,6 +27,7 @@ class TaskController {
         containerImage
       } = req.body;
       const task = new Task({
+        user: userId,
         repo,
         releaseAsset,
         additionalFiles,
