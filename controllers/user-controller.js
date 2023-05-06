@@ -24,7 +24,7 @@ class UserController {
         throw { errors: { email: { message: 'Email is required' } } };
       if (!password)
         throw { errors: { password: { message: 'Password is required' } } };
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ email }).select('+password');
       if (!user || !comparePassword(password, user.password))
         throw { name: 'InvalidCredentials' };
       const payload = { id: user._id };

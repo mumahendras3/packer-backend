@@ -8,7 +8,8 @@ const Repo = require("../models/repo");
 class TaskController {
   static async listTasks(req, res, next) {
     try {
-      const tasks = await Task.find({}).populate('repo additionalFiles', '-__v').select('-__v');
+      const { id } = req.loggedInUser;
+      const tasks = await Task.find({ user: id }).populate('repo additionalFiles user', '-__v').select('-__v');
       res.status(200).json(tasks);
     } catch (err) {
       next(err);
