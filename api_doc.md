@@ -31,7 +31,8 @@ Request:
 ```json
 {
   "email": "string",
-  "password": "string"
+  "password": "string",
+  "name": "string"
 }
 ```
 
@@ -42,7 +43,8 @@ Response:
 ```json
 {
   "message": "Registration successful",
-  "email": "<newly_registered_user_email>"
+  "email": "<newly_registered_user_email>",
+  "name": "<newly_registered_user_name>"
 }
 ```
 

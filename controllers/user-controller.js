@@ -5,12 +5,13 @@ const User = require("../models/user");
 class UserController {
   static async register(req, res, next) {
     try {
-      const { email, password } = req.body;
-      const user = new User({ email, password });
+      const { email, password, name } = req.body;
+      const user = new User({ email, password, name });
       await user.save();
       res.status(201).json({
         message: 'Registration successful',
-        email: user.email
+        email: user.email,
+        name: user.name
       });
     } catch (err) {
       next(err);
