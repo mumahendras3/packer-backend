@@ -3,9 +3,11 @@ const client = require("../config/harbor-master");
 const fs = require("fs/promises");
 const tar = require("tar");
 const Task = require("../models/task");
+const User = require("../models/user");
 const download = require("../helpers/download");
 const Repo = require("../models/repo");
-
+const schedule = require("node-schedule");
+const { nodeMailer } = require("../helpers/nodemailer");
 class TaskController {
   static async listTasks(req, res, next) {
     try {
@@ -46,6 +48,7 @@ class TaskController {
         additionalFiles,
         runCommand,
         containerImage,
+        runAt,
       } = req.body;
 
       const task = new Task({
@@ -55,7 +58,9 @@ class TaskController {
         additionalFiles,
         runCommand,
         containerImage,
+        runAt,
       });
+
       const opt = {
         filters: {
           reference: [task.containerImage],
@@ -77,11 +82,11 @@ class TaskController {
       let image;
       try {
         image = await client.images().inspect(split[0]);
-        console.log(image);
+        // console.log(image);
       } catch (error) {
-        console.log("masuk error");
+        // console.log("masuk error");
         const result = await client.images().create(options);
-        console.log(result, "<<<image");
+        // console.log(result, "<<<image");
         image = await client.images().inspect(split[0]);
         // console.log(error, "<<error");
       }
@@ -92,7 +97,7 @@ class TaskController {
         })
       ) {
         const response = await client.images().create(options);
-        console.log(response);
+        // console.log(response);
       }
       const model = {
         Image: task.containerImage,
@@ -138,14 +143,54 @@ class TaskController {
         socketPath,
         data: file,
       };
-      console.log(axiosOptions);
+      // console.log(axiosOptions);
       const rs = await axios(axiosOptions);
       // Cleanup the file since it's already sent
       await fs.unlink(`files/for-${container.Id}.tgz`);
 
-      console.log(rs);
+      // console.log(rs);
       task.containerId = container.Id;
       await task.save();
+      if (task.runAt) {
+        const { year, month, date, hour, minute, second } = task.runAt;
+        console.log({ year, month: month - 1, date, hour, minute, second });
+        const dates = new Date(year, month - 1, date, hour, minute, second);
+        console.log(dates);
+        schedule.scheduleJob(dates, async function () {
+          // console.log("masuk");
+          try {
+            // console.log("masuk sini");
+            console.log(task.containerId, "<<<<<");
+            await new Promise(async (resolve, reject) => {
+              try {
+                await client.containers().start(task.containerId);
+              } catch (error) {
+                if (error.response.statusCode === 204) {
+                  resolve();
+                } else {
+                  reject(error);
+                }
+              }
+            });
+            const user = await User.findById(task.user);
+            const inspect = await client.containers().inspect(task.containerId);
+            console.log(inspect, "<<data inspect");
+            if (inspect.State.Status === "running") {
+              task.status = "Running";
+              await task.save();
+            }
+            // // console.log(container);
+            // console.log(user.email, "<<email user");
+            nodeMailer(
+              user.email,
+              "Task started",
+              `<h1>The task below is already started ${task.runCommand} ${task.repo} ${task.releaseAsset} ${task.additionalFiles} ${task.containerImage} </h1>`
+            );
+          } catch (err) {
+            console.log(err, "masuk error<<<<");
+          }
+        });
+      }
       res.status(201).json({
         message: "Task successfully added",
         id: task._id,
