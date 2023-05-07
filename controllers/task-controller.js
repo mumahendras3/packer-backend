@@ -19,6 +19,23 @@ class TaskController {
     }
   }
 
+  static async searchDockerHubImage(req, res, next) {
+    try {
+      const { filter } = req.body;
+      console.log(filter);
+
+      const data = await client.images().search({ term: filter });
+      const dataFilter = data.filter((el) => {
+        return el.name.includes(filter);
+      });
+      // console.log(dataFilter);
+      res.send(dataFilter);
+    } catch (err) {
+      console.log(err);
+      next(err);
+    }
+  }
+
   static async addTask(req, res, next) {
     try {
       const { id: userId } = req.loggedInUser;
@@ -30,13 +47,7 @@ class TaskController {
         runCommand,
         containerImage,
       } = req.body;
-      console.log({
-        repo,
-        releaseAsset,
-        additionalFiles,
-        runCommand,
-        containerImage,
-      });
+
       const task = new Task({
         user: userId,
         repo,
@@ -52,20 +63,29 @@ class TaskController {
       };
 
       const split = task.containerImage.split(":");
+      if (!split[1]) {
+        split[1] = "latest";
+      }
+
+      console.log(split[1]);
+      console.log(split);
       const options = {
         fromImage: split[0],
         tag: split[1],
       };
-      console.log(split, "<<<splitnya");
+
       let image;
       try {
         image = await client.images().inspect(split[0]);
+        console.log(image);
       } catch (error) {
+        console.log("masuk error");
         const result = await client.images().create(options);
-        console.log(result);
-        console.log(error, "<<error");
+        console.log(result, "<<<image");
+        image = await client.images().inspect(split[0]);
+        // console.log(error, "<<error");
       }
-      console.log(image, "<<<image");
+
       if (
         !image.RepoTags.find((el) => {
           el.includes(split[1]);
@@ -122,17 +142,7 @@ class TaskController {
       const rs = await axios(axiosOptions);
       // Cleanup the file since it's already sent
       await fs.unlink(`files/for-${container.Id}.tgz`);
-      // // Start the container
-      // response = await axios({
-      //   method: "POST",
-      //   url:
-      //     process.env.DOCKER_ENGINE_URL + `/containers/${container.Id}/start`,
-      // });
-      // if (response.status === 204) {
-      //   task.containerId = container.Id;
-      //   task.status = "Running";
-      //   await task.save();
-      // }
+
       console.log(rs);
       task.containerId = container.Id;
       await task.save();
@@ -150,6 +160,7 @@ class TaskController {
       const { id } = req.params;
       const task = await Task.findById(id).populate("repo additionalFiles");
       if (!task) throw { name: "TaskNotFound" };
+      // api harbor master return to error if success start container
       await new Promise(async (resolve, reject) => {
         try {
           await client.containers().start(task.containerId);
