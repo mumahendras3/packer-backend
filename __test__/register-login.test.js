@@ -28,6 +28,38 @@ describe('POST /register', () => {
     expect(res.body).toHaveProperty('name', user1.name);
     expect(res.body).toHaveProperty('message', 'Registration successful');
   });
+
+  it(`should respond with the error message "This email has already been registered"`, async () => {
+    const res = await request(app)
+      .post('/register')
+      .send(user1);
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'This email has already been registered');
+  });
+
+  it(`should respond with the error message "Email is required"`, async () => {
+    const res = await request(app)
+      .post('/register')
+      .send({ password: user1.password });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Email is required');
+  });
+
+  it(`should respond with the error message "Password is required"`, async () => {
+    const res = await request(app)
+      .post('/register')
+      .send({ email: user1.email });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Password is required');
+  });
+
+  it(`should respond with the error message "Invalid email format"`, async () => {
+    const res = await request(app)
+      .post('/register')
+      .send({ email: 'test', password: '1234' });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Invalid email format');
+  });
 });
 
 describe('POST /login', () => {
