@@ -1,41 +1,49 @@
-const mongoose = require('../config/connection');
+const mongoose = require("../config/connection");
 const { Schema } = mongoose;
 
 const taskSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'User is required']
+    ref: "User",
+    required: [true, "User is required"],
   },
   repo: {
     type: Schema.Types.ObjectId,
-    ref: 'Repo',
-    required: [true, 'Repo is required']
+    ref: "Repo",
+    required: [true, "Repo is required"],
   },
   releaseAsset: {
     type: String,
-    required: [true, 'Release asset is required']
+    required: [true, "Release asset is required"],
   },
-  additionalFiles: [{ type: Schema.Types.ObjectId, ref: 'File' }],
+  additionalFiles: [{ type: Schema.Types.ObjectId, ref: "File" }],
   runCommand: {
     type: String,
-    required: [true, 'Run command is required']
+    required: [true, "Run command is required"],
   },
   containerImage: {
     type: String,
-    required: [true, 'Container Image is required']
+    required: [true, "Container Image is required"],
   },
   containerId: String,
+  runAt: {
+    second: Number,
+    minute: Number,
+    hour: Number,
+    date: Number,
+    month: Number,
+    year: Number,
+  },
   status: {
     type: String,
-    default: 'Created',
+    default: "Created",
     enum: {
-      values: ['Created', 'Running', 'Failed', 'Succeeded'],
-      message: 'Unknown status: {VALUE}'
-    }
-  }
+      values: ["Created", "Running", "Failed", "Succeeded"],
+      message: "Unknown status: {VALUE}",
+    },
+  },
 });
 
-const Task = mongoose.model('Task', taskSchema);
+const Task = mongoose.model("Task", taskSchema);
 
 module.exports = Task;
