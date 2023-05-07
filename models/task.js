@@ -27,12 +27,15 @@ const taskSchema = new Schema({
   },
   containerId: String,
   runAt: {
-    second: Number,
-    minute: Number,
-    hour: Number,
-    date: Number,
-    month: Number,
-    year: Number,
+    type: {
+      second: Number,
+      minute: Number,
+      hour: Number,
+      date: Number,
+      month: Number,
+      year: Number,
+    },
+    default: null,
   },
   status: {
     type: String,
