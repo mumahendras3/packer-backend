@@ -37,21 +37,18 @@ const client = require("./config/harbor-master");
 //     })
 //   })
 // })
-schedule.scheduleJob("*/5 * * * * *", async function () {
+schedule.scheduleJob(process.env.TASKS_CHECK_FREQUENCY, async function () {
   const query = {
     status: {
       $eq: "Running",
     },
   };
   const task = await Task.find(query);
-  // console.log(task);
-
-  console.log(task);
 
   for (let i = 0; i < task.length; i++) {
     const idContainer = task[i].containerId;
     const inspect = await client.containers().inspect(idContainer);
-    // console.log(inspect, "<<<inspect");
+
     if (inspect.State.Status === "exited") {
       if (inspect.State.ExitCode === 0) {
         task[i].status = "Succeeded";
