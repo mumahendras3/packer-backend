@@ -63,6 +63,12 @@ class RepoController {
         name: asset.name,
         url: asset.browser_download_url
       }));
+      const axiosOptions2 = {
+        method : 'GET',
+        url : `https://api.github.com/users/${repo.ownerName}`
+      }
+      const dataAvatar = await axios(axiosOptions2)
+      repo.ownerAvatar = dataAvatar.data.avatar_url;
       await repo.save();
       // Add this repo to the logged-in user's watch list
       user.watchList.push(repo._id);
