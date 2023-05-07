@@ -150,6 +150,7 @@ class TaskController {
 
       // console.log(rs);
       task.containerId = container.Id;
+      console.log(task.runAt, "<<<run atnya");
       await task.save();
       if (task.runAt) {
         const { year, month, date, hour, minute, second } = task.runAt;
@@ -217,42 +218,13 @@ class TaskController {
           }
         }
       });
-      const opt = {
-        details: true,
-        timestamps: true,
-        stdout: true,
-        tail: "all",
-      };
-      const log = await client.containers().logs(task.containerId, opt);
-      const lines = log.split(/\r?\n/).slice(0, -1);
-      const arr = [];
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].replace(
-          /[\x00\x01\x02\x03\x04\x05\x06\07\xFF]/g,
-          ""
-        );
-        arr.push(line);
+      const inspect = await client.containers().inspect(task.containerId);
+      console.log(inspect, "<<data inspect");
+      if (inspect.State.Status === "running") {
+        task.status = "Running";
+        await task.save();
       }
-      let cleaning = "";
-      const remove = /,/g;
-      for (let j = 0; j < arr.length; j++) {
-        const sliced = arr[j].slice(1);
-        const date = sliced.substring(0, 30);
-        const content = sliced.substring(30);
-        const newformatDate = new Date(date);
-        const dates = new Intl.DateTimeFormat("en-GB", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "numeric",
-          minute: "numeric",
-          second: "2-digit",
-        }).format(newformatDate);
-        const newDate = dates.replace(remove, "");
-        cleaning += newDate + content + "\n";
-      }
-      console.log(cleaning, "<<bersih");
-      res.send(cleaning);
+      res.status(204).json();
     } catch (err) {
       next(err);
     }
@@ -301,18 +273,51 @@ class TaskController {
       const { id } = req.params;
       const task = await Task.findById(id);
       if (!task) throw { name: "TaskNotFound" };
-      const response = await axios({
-        method: "GET",
-        url:
-          process.env.DOCKER_ENGINE_URL +
-          `/containers/${task.containerId}/logs?stdout=true&stderr=true`,
-        headers: {
-          Accept: "application/vnd.docker.multiplexed-stream",
-        },
-      });
-      if (response.status !== 200) throw { response };
-      res.set("Content-Type", "application/vnd.docker.multiplexed-stream");
-      res.status(response.status).send(response.data);
+
+      const opt = {
+        details: true,
+        timestamps: true,
+        stdout: true,
+        tail: "all",
+      };
+
+      if (task.status === "Created") {
+        throw {
+          name: "TaskNotStarted",
+        };
+      }
+      const inspect = await client.containers().inspect(task.containerId);
+
+      const log = await client.containers().logs(task.containerId, opt);
+      const lines = log.split(/\r?\n/).slice(0, -1);
+      const arr = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].replace(
+          /[\x00\x01\x02\x03\x04\x05\x06\07\xFF]/g,
+          ""
+        );
+        arr.push(line);
+      }
+      let cleaning = "";
+      const remove = /,/g;
+      for (let j = 0; j < arr.length; j++) {
+        const sliced = arr[j].slice(1);
+        const date = sliced.substring(0, 30);
+        const content = sliced.substring(30);
+        const newformatDate = new Date(date);
+        const dates = new Intl.DateTimeFormat("en-GB", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "numeric",
+          minute: "numeric",
+          second: "2-digit",
+        }).format(newformatDate);
+        const newDate = dates.replace(remove, "");
+        cleaning += newDate + content + "\n";
+      }
+      console.log(cleaning, "<<bersih");
+      res.send(cleaning);
     } catch (err) {
       next(err);
     }

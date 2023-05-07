@@ -49,7 +49,7 @@ schedule.scheduleJob(process.env.TASKS_CHECK_FREQUENCY, async function () {
   for (let i = 0; i < task.length; i++) {
     const idContainer = task[i].containerId;
     const inspect = await client.containers().inspect(idContainer);
-
+    console.log(new Date(), "Check task every 5 min");
     if (inspect.State.Status === "exited") {
       if (inspect.State.ExitCode === 0) {
         task[i].status = "Succeeded";
