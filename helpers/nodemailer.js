@@ -7,20 +7,18 @@ function nodeMailer(to, subject, html) {
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: "winson91100@gmail.com", // generated ethereal user
-      pass: "nuqzdiaruytwwsil", // generated ethereal password
+      user: process.env.NODEMAILER_USER, // generated ethereal user
+      pass: process.env.NODEMAILER_PASSWORD, // generated ethereal password
     },
-    tls:{
-        rejectUnauthorized:false
+    tls: {
+      rejectUnauthorized: false
     }
   });
 
   const options = {
     from: "PackerTeam <Packerteam@gmail.com>", // sender address
-    // to: data, // list of receivers
-    to,
+    to, // list of receivers
     subject, // Subject line
-    // html: html,
     html
   };
 
@@ -28,12 +26,12 @@ function nodeMailer(to, subject, html) {
     if (err) {
       console.log(err);
     } else {
-      console.log("Succes send email");
+      console.log("Email successfully sent");
       console.log("Message sent: %s", info.messageId);
     }
   });
 }
 
-module.exports ={
-    nodeMailer
+module.exports = {
+  nodeMailer
 }

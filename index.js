@@ -10,7 +10,7 @@ const { default: axios } = require("axios");
 const User = require('./models/user');
 
 schedule.scheduleJob(process.env.REPOS_CHECK_FREQUENCY,async function(){
-  console.log('masuk' + new Date());
+  console.log(new Date(), 'Checking for updates for all repos');
 
   const users = await User.find().populate('watchList', '-__v')
 
