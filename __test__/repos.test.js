@@ -52,11 +52,18 @@ const mockRespNotFound = {
     }
   }
 }
+// When trying to check for an update for a repo in the database
+const mockRespUpdate = {
+  data: {
+    name: 'v1.1' // Simulating update from v1.0 to v1.1
+  }
+};
 // Register these mock responses (these order of invocation corresponds
 // with the order of axios request that will be executed at test time)
 axios.mockResolvedValueOnce(mockRespGetVersion);
 axios.mockResolvedValueOnce(mockRespGetAvatarUrl);
 axios.mockRejectedValueOnce(mockRespNotFound);
+axios.mockResolvedValueOnce(mockRespUpdate);
 
 beforeAll(async () => {
   // Insert the temporary user
@@ -155,5 +162,25 @@ describe('GET /repos', () => {
     expect(Array.isArray(res.body[0].latestReleaseAssets)).toBe(true);
     expect(res.body[0].latestReleaseAssets[0].name).toBe(mockRespGetVersion.data.assets[0].name);
     expect(res.body[0].latestReleaseAssets[0].url).toBe(mockRespGetVersion.data.assets[0].browser_download_url);
+  });
+});
+
+describe('PATCH /repos', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .patch('/repos');
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
+  it(`should respond with the message "All repos successfully checked for update" when no axios error thrown`, async () => {
+    const res = await request(app)
+      .patch('/repos')
+      .set('access_token', access_token);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('message', 'All repos successfully checked for update');
+    // Make sure the version in the database is also updated (v1.0 -> v1.1)
+    const repo = await Repo.findOne(repo1);
+    expect(repo).toHaveProperty('latestVersion', 'v1.1');
   });
 });
