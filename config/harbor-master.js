@@ -9,7 +9,7 @@ if (process.env.DOCKER_REMOTE_HOST && process.env.DOCKER_REMOTE_PORT) {
   });
 } else {
   client = docker.Client({
-    socket: process.env.UNIX_SOCKET || '/var/run/docker.sock',
+    socket: process.env.DOCKER_UNIX_SOCKET || '/var/run/docker.sock',
   });
 }
 
