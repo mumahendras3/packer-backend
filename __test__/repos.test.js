@@ -184,3 +184,36 @@ describe('PATCH /repos', () => {
     expect(repo).toHaveProperty('latestVersion', 'v1.1');
   });
 });
+
+describe('DELETE /repos/:id', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    // Get the soon-to-be-deleted repo first
+    const repo = await Repo.findOne(repo1);
+    const res = await request(app)
+      .delete(`/repos/${repo._id.toString()}`);
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
+  it(`should respond with the error message "Repository not found in the watch list"`, async () => {
+    const res = await request(app)
+      .delete('/repos/64592d510230d28aef332764') // this is a valid, random ObjectId
+      .set('access_token', access_token);
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('message', 'Repository not found in the watch list');
+  });
+
+  it(`should respond with the message "Repository successfully removed from the watch list" along with the removed repo's data`, async () => {
+    // Get the soon-to-be-deleted repo first
+    const repo = await Repo.findOne(repo1);
+    const res = await request(app)
+      .delete(`/repos/${repo._id.toString()}`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('message', 'Repository successfully removed from the watch list');
+    expect(res.body).toHaveProperty('removedRepo');
+    expect(res.body.removedRepo).toHaveProperty('name', repo1.name);
+    expect(res.body.removedRepo).toHaveProperty('ownerName', repo1.ownerName);
+    expect(res.body.removedRepo).toHaveProperty('_id', repo._id.toString());
+  });
+});
