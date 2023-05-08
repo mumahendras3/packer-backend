@@ -100,6 +100,13 @@ const harborMasterMockRespSuccessStartContainer = {
     statusCode: 204
   }
 };
+const harborMasterMockRespSearchImagesOnDockerHub = [{
+  "star_count": 1,
+  "is_official": true,
+  "name": "image1",
+  "is_automated": false,
+  "description": "description1"
+}];
 // Register these mock responses (these order of invocation corresponds
 // with the order of function invocation at test time, including inside `app`)
 client.images.mockReturnValueOnce({
@@ -117,7 +124,12 @@ client.containers.mockReturnValueOnce({
     // Using throw here as a workaround for a harbor master bug, where a successful starting
     // of a container will actually result in a throwed success response as returned by the
     // Docker Engine
-    throw harborMasterMockRespSuccessStartContainer
+    throw harborMasterMockRespSuccessStartContainer;
+  }
+});
+client.images.mockReturnValueOnce({
+  async search() {
+    return harborMasterMockRespSearchImagesOnDockerHub;
   }
 });
 
@@ -281,5 +293,25 @@ describe('GET /tasks/:id', () => {
       .set('access_token', access_token);
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('_id', taskId);
+  });
+});
+
+describe('POST /tasks/search', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .post('/tasks/search')
+      .send({ filter: 'image1' });
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
+  it(`should respond with the container image search results from Docker Hub`, async () => {
+    const res = await request(app)
+      .post('/tasks/search')
+      .set('access_token', access_token)
+      .send({ filter: 'image1' });
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body).toStrictEqual(harborMasterMockRespSearchImagesOnDockerHub);
   });
 });
