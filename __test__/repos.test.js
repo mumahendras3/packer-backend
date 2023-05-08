@@ -135,8 +135,8 @@ describe('GET /repos', () => {
     expect(res.body[0]).toHaveProperty('ownerName', repo1.ownerName);
     expect(res.body[0]).toHaveProperty('currentVersion', mockRespGetVersion.data.name);
     expect(res.body[0]).toHaveProperty('latestVersion', mockRespGetVersion.data.name);
-    expect(res.body[0]).toHaveProperty('latestReleaseAssets');
     expect(res.body[0]).toHaveProperty('ownerAvatar', mockRespGetAvatarUrl.data.avatar_url);
+    expect(res.body[0]).toHaveProperty('latestReleaseAssets');
     expect(Array.isArray(res.body[0].latestReleaseAssets)).toBe(true);
     expect(res.body[0].latestReleaseAssets[0].name).toBe(mockRespGetVersion.data.assets[0].name);
     expect(res.body[0].latestReleaseAssets[0].url).toBe(mockRespGetVersion.data.assets[0].browser_download_url);
