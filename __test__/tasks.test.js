@@ -160,4 +160,40 @@ describe(`POST /tasks`, () => {
     });
     expect(res.body).toHaveProperty('id', task._id.toString());
   });
+
+  it(`should respond with the error message "Repo is required"`, async () => {
+    const res = await request(app)
+      .post('/tasks')
+      .set('access_token', access_token)
+      .send({ ...task1, repo: null });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Repo is required');
+  });
+
+  it(`should respond with the error message "Release asset is required"`, async () => {
+    const res = await request(app)
+      .post('/tasks')
+      .set('access_token', access_token)
+      .send({ ...task1, releaseAsset: null });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Release asset is required');
+  });
+
+  it(`should respond with the error message "Run command is required"`, async () => {
+    const res = await request(app)
+      .post('/tasks')
+      .set('access_token', access_token)
+      .send({ ...task1, runCommand: null });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Run command is required');
+  });
+
+  it(`should respond with the error message "Container Image is required"`, async () => {
+    const res = await request(app)
+      .post('/tasks')
+      .set('access_token', access_token)
+      .send({ ...task1, containerImage: null });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Container Image is required');
+  });
 });
