@@ -101,11 +101,8 @@ class TaskController {
         image = await client.images().inspect(split[0]);
         // console.log(image);
       } catch (error) {
-        // console.log("masuk error");
         const result = await client.images().create(options);
-        // console.log(result, "<<<image");
         image = await client.images().inspect(split[0]);
-        // console.log(error, "<<error");
       }
 
       if (
@@ -303,12 +300,10 @@ class TaskController {
           }
         }
       });
-      const inspect = await client.containers().inspect(task.containerId);
-      console.log(inspect, "<<data inspect");
-      if (inspect.State.Status === "running") {
-        task.status = "Running";
-        await task.save();
-      }
+
+      task.status = "Running";
+      await task.save();
+
       res.status(204).json();
     } catch (err) {
       next(err);
