@@ -134,9 +134,49 @@ Response:
 ```json
 [
   {
-    "_id": "642be7f19088def1c5e63489",
+    "_id": "64589b586b5f79b0b7d889e5",
     "name": "Mailspring",
-    "ownerName": "Foundry376"
+    "ownerName": "Foundry376",
+    "latestReleaseAssets": [
+      {
+        "name": "mailspring-1.10.8-0.1.x86_64.rpm",
+        "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/mailspring-1.10.8-0.1.x86_64.rpm",
+        "_id": "64589b586b5f79b0b7d889e6"
+      },
+      {
+        "name": "mailspring-1.10.8-amd64.deb",
+        "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/mailspring-1.10.8-amd64.deb",
+        "_id": "64589b586b5f79b0b7d889e7"
+      },
+      {
+        "name": "Mailspring-1.10.8-full.nupkg",
+        "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring-1.10.8-full.nupkg",
+        "_id": "64589b586b5f79b0b7d889e8"
+      },
+      {
+        "name": "Mailspring-AppleSilicon.zip",
+        "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring-AppleSilicon.zip",
+        "_id": "64589b586b5f79b0b7d889e9"
+      },
+      {
+        "name": "Mailspring.zip",
+        "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring.zip",
+        "_id": "64589b586b5f79b0b7d889ea"
+      },
+      {
+        "name": "MailspringSetup.exe",
+        "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/MailspringSetup.exe",
+        "_id": "64589b586b5f79b0b7d889eb"
+      },
+      {
+        "name": "RELEASES",
+        "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/RELEASES",
+        "_id": "64589b586b5f79b0b7d889ec"
+      }
+    ],
+    "currentVersion": "1.10.8",
+    "latestVersion": "1.10.8",
+    "ownerAvatar": "https://avatars.githubusercontent.com/u/1065759?v=4"
   }
 ]
 ```
