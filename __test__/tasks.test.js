@@ -62,17 +62,38 @@ const mockRespGetAvatarUrl = {
     avatar_url: 'https://picsum.photos/200'
   }
 };
+// When putting an archive file inside a container using axios (no response needed)
+const mockRespPutArchive = {};
 // When trying to download the build output from a container
 const mockRespGetBuildOutput = {
-  data: {}
+  data: {} // Pretend that this is some kind of binary data
+};
+// When checking for a failing container's status through axios
+const mockRespGetContainerStatusFailed = {
+  data: {
+    State: {
+      Status: 'exited',
+      ExitCode: 1
+    }
+  }
+};
+// When checking for a succeeding container's status through axios
+const mockRespGetContainerStatusSucceeded = {
+  data: {
+    State: {
+      Status: 'exited',
+      ExitCode: 0
+    }
+  }
 };
 // Register these mock responses (these order of invocation corresponds
 // with the order of axios request that will be executed at test time)
 axios.mockResolvedValueOnce(mockRespGetVersion);
 axios.mockResolvedValueOnce(mockRespGetAvatarUrl);
-// The download build output axios request seems to fail if we use
-// mockResolvedValueOnce, so we'll use mockResolvedValue here for now
-axios.mockResolvedValue(mockRespGetBuildOutput);
+axios.mockResolvedValueOnce(mockRespPutArchive);
+axios.mockResolvedValueOnce(mockRespGetBuildOutput);
+axios.mockResolvedValueOnce(mockRespGetContainerStatusFailed);
+axios.mockResolvedValueOnce(mockRespGetContainerStatusSucceeded);
 
 // Testing data
 const task1 = {
@@ -387,5 +408,40 @@ describe('GET /tasks/:id/download', () => {
     expect(res.header).toHaveProperty('content-type', 'application/x-tar; charset=utf-8');
     expect(res.header).toHaveProperty('content-disposition', `attachment; filename="${task._id}-build-output.tar"`);
     expect(res.body).toStrictEqual(mockRespGetBuildOutput.data);
+  });
+});
+
+describe('GET /tasks/:id/status', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .get('/tasks/645906542b43a050936c3bde/status'); // this is a valid, randomly generated ObjectId
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
+  it(`should respond with the error message "Task not found"`, async () => {
+    const res = await request(app)
+      .get('/tasks/645906542b43a050936c3bde/status') // this is a valid, randomly generated ObjectId
+      .set('access_token', access_token);
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('message', 'Task not found');
+  });
+
+  it(`should respond with the data of the task in question with its status updated to the correct value "Failed"`, async () => {
+    const res = await request(app)
+      .get(`/tasks/${taskId}/status`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('_id', taskId);
+    expect(res.body).toHaveProperty('status', 'Failed');
+  });
+
+  it(`should respond with the data of the task in question with its status updated to the correct value "Succeeded"`, async () => {
+    const res = await request(app)
+      .get(`/tasks/${taskId}/status`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('_id', taskId);
+    expect(res.body).toHaveProperty('status', 'Succeeded');
   });
 });
