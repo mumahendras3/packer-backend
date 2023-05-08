@@ -173,6 +173,7 @@ class TaskController {
                 }
               }
             });
+
             const user = await User.findById(task.user);
             const inspect = await client.containers().inspect(task.containerId);
             console.log(inspect, "<<data inspect");
@@ -198,6 +199,14 @@ class TaskController {
       });
     } catch (err) {
       next(err);
+    }
+  }
+
+  static async downloadOutput(req, res, next) {
+    try {
+      const { id } = req.params;
+    } catch (err) {
+      console.log(err);
     }
   }
 
