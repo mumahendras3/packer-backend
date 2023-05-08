@@ -62,10 +62,17 @@ const mockRespGetAvatarUrl = {
     avatar_url: 'https://picsum.photos/200'
   }
 };
+// When trying to download the build output from a container
+const mockRespGetBuildOutput = {
+  data: {}
+};
 // Register these mock responses (these order of invocation corresponds
 // with the order of axios request that will be executed at test time)
 axios.mockResolvedValueOnce(mockRespGetVersion);
 axios.mockResolvedValueOnce(mockRespGetAvatarUrl);
+// The download build output axios request seems to fail if we use
+// mockResolvedValueOnce, so we'll use mockResolvedValue here for now
+axios.mockResolvedValue(mockRespGetBuildOutput);
 
 // Testing data
 const task1 = {
@@ -313,5 +320,72 @@ describe('POST /tasks/search', () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body).toStrictEqual(harborMasterMockRespSearchImagesOnDockerHub);
+  });
+});
+
+describe('GET /tasks/:id/download', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .get('/tasks/645906542b43a050936c3bde/download'); // this is a valid, randomly generated ObjectId
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
+  it(`should respond with the error message "Task not found"`, async () => {
+    const res = await request(app)
+      .get('/tasks/645906542b43a050936c3bde/download') // this is a valid, randomly generated ObjectId
+      .set('access_token', access_token);
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('message', 'Task not found');
+  });
+
+  it(`should respond with the error message "Task is still running"`, async () => {
+    const res = await request(app)
+      .get(`/tasks/${taskId}/download`)
+      .set('access_token', access_token);
+    // Since taskId was started by a test case from before, the response should be an error.
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Task is still running');
+  });
+
+  it(`should respond with the error message "Task not yet started"`, async () => {
+    // Testing the other error messages by modifying the status field first
+    const task = await Task.findById(taskId);
+    task.status = 'Created';
+    await task.save();
+    // Then perform the request
+    const res = await request(app)
+      .get(`/tasks/${taskId}/download`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Task not yet started');
+  });
+
+  it(`should respond with the error message "Task fail"`, async () => {
+    // Testing the other error messages by modifying the status field first
+    const task = await Task.findById(taskId);
+    task.status = 'Failed';
+    await task.save();
+    // Then perform the request
+    const res = await request(app)
+      .get(`/tasks/${taskId}/download`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Task fail');
+  });
+
+  it(`should respond with a tar archive of /task/output contents that the client can download`, async () => {
+    // Simulating a successful task
+    const task = await Task.findById(taskId);
+    task.status = 'Succeeded';
+    await task.save();
+    // Then perform the request
+    const res = await request(app)
+      .get(`/tasks/${taskId}/download`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(200);
+    expect(res.header).toHaveProperty('content-type', 'application/x-tar; charset=utf-8');
+    expect(res.header).toHaveProperty('content-disposition', `attachment; filename="${task._id}-build-output.tar"`);
+    expect(res.body).toStrictEqual(mockRespGetBuildOutput.data);
   });
 });
