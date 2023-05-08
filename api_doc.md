@@ -259,7 +259,7 @@ Response:
 
 ## GET /tasks
 
-Description: Get all previously created tasks
+Description: Get all the tasks that the authenticated user has added
 
 Request:
 
