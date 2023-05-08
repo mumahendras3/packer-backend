@@ -177,7 +177,8 @@ Response:
     "currentVersion": "1.10.8",
     "latestVersion": "1.10.8",
     "ownerAvatar": "https://avatars.githubusercontent.com/u/1065759?v=4"
-  }
+  },
+  ...
 ]
 ```
 
@@ -277,71 +278,142 @@ Response:
 ```json
 [
   {
-    "_id": "642d8aec812bbf22039fb162",
+    "_id": "6458ae679d976d6e08123402",
+    "user": {
+      "_id": "6455d88c69cf04f4bde328e4",
+      "email": "m1@m.com",
+      "name": "m1",
+      "watchList": [
+        "64561c959ff6ab9721ebf0d6",
+        "64589b586b5f79b0b7d889e5",
+        "6458ac80567368631b0be5d7"
+      ]
+    },
     "repo": {
-      "_id": "642d7b00812bbf22039fb035",
+      "_id": "6458ac80567368631b0be5d7",
       "name": "Mailspring",
       "ownerName": "Foundry376",
       "latestReleaseAssets": [
         {
           "name": "mailspring-1.10.8-0.1.x86_64.rpm",
           "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/mailspring-1.10.8-0.1.x86_64.rpm",
-          "_id": "642d7b00812bbf22039fb036"
+          "_id": "6458ac81567368631b0be5d8"
         },
         {
           "name": "mailspring-1.10.8-amd64.deb",
           "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/mailspring-1.10.8-amd64.deb",
-          "_id": "642d7b00812bbf22039fb037"
+          "_id": "6458ac81567368631b0be5d9"
         },
         {
           "name": "Mailspring-1.10.8-full.nupkg",
           "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring-1.10.8-full.nupkg",
-          "_id": "642d7b00812bbf22039fb038"
+          "_id": "6458ac81567368631b0be5da"
         },
         {
           "name": "Mailspring-AppleSilicon.zip",
           "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring-AppleSilicon.zip",
-          "_id": "642d7b00812bbf22039fb039"
+          "_id": "6458ac81567368631b0be5db"
         },
         {
           "name": "Mailspring.zip",
           "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring.zip",
-          "_id": "642d7b00812bbf22039fb03a"
+          "_id": "6458ac81567368631b0be5dc"
         },
         {
           "name": "MailspringSetup.exe",
           "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/MailspringSetup.exe",
-          "_id": "642d7b00812bbf22039fb03b"
+          "_id": "6458ac81567368631b0be5dd"
         },
         {
           "name": "RELEASES",
           "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/RELEASES",
-          "_id": "642d7b00812bbf22039fb03c"
+          "_id": "6458ac81567368631b0be5de"
         }
       ],
       "currentVersion": "1.10.8",
-      "latestVersion": "1.10.8"
+      "latestVersion": "1.10.8",
+      "ownerAvatar": "https://avatars.githubusercontent.com/u/1065759?v=4"
     },
-    "releaseAsset": "mailspring-1.10.8-amd64.deb",
-    "additionalFiles": [
-      {
-        "_id": "642d8aeb812bbf22039fb15d",
-        "name": "KTP.pdf",
-        "path": "files/KTP.pdf",
-        "mimeType": "application/pdf",
-        "extract": false
-      },
-      {
-        "_id": "642d8aeb812bbf22039fb15f",
-        "name": "KTP.png",
-        "path": "files/KTP.png",
-        "mimeType": "image/png",
-        "extract": false
-      }
-    ],
-    "runCommand": "echo hello world",
-    "containerImage": "ubuntu:latest",
-    "status": "Succeeded"
+    "releaseAsset": "RELEASES",
+    "additionalFiles": [],
+    "runCommand": "echo \"hello world\"",
+    "containerImage": "alpine:latest",
+    "runAt": null,
+    "status": "Created",
+    "containerId": "ba2726e325cb22677cbfe37d2ff31ca3db809a2a9858a5fac1f6a2f0360dfb0e"
+  },
+  {
+    "_id": "6458af169d976d6e08123418",
+    "user": {
+      "_id": "6455d88c69cf04f4bde328e4",
+      "email": "m1@m.com",
+      "name": "m1",
+      "watchList": [
+        "64561c959ff6ab9721ebf0d6",
+        "64589b586b5f79b0b7d889e5",
+        "6458ac80567368631b0be5d7"
+      ]
+    },
+    "repo": {
+      "_id": "6458ac80567368631b0be5d7",
+      "name": "Mailspring",
+      "ownerName": "Foundry376",
+      "latestReleaseAssets": [
+        {
+          "name": "mailspring-1.10.8-0.1.x86_64.rpm",
+          "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/mailspring-1.10.8-0.1.x86_64.rpm",
+          "_id": "6458ac81567368631b0be5d8"
+        },
+        {
+          "name": "mailspring-1.10.8-amd64.deb",
+          "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/mailspring-1.10.8-amd64.deb",
+          "_id": "6458ac81567368631b0be5d9"
+        },
+        {
+          "name": "Mailspring-1.10.8-full.nupkg",
+          "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring-1.10.8-full.nupkg",
+          "_id": "6458ac81567368631b0be5da"
+        },
+        {
+          "name": "Mailspring-AppleSilicon.zip",
+          "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring-AppleSilicon.zip",
+          "_id": "6458ac81567368631b0be5db"
+        },
+        {
+          "name": "Mailspring.zip",
+          "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring.zip",
+          "_id": "6458ac81567368631b0be5dc"
+        },
+        {
+          "name": "MailspringSetup.exe",
+          "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/MailspringSetup.exe",
+          "_id": "6458ac81567368631b0be5dd"
+        },
+        {
+          "name": "RELEASES",
+          "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/RELEASES",
+          "_id": "6458ac81567368631b0be5de"
+        }
+      ],
+      "currentVersion": "1.10.8",
+      "latestVersion": "1.10.8",
+      "ownerAvatar": "https://avatars.githubusercontent.com/u/1065759?v=4"
+    },
+    "releaseAsset": "RELEASES",
+    "additionalFiles": [],
+    "runCommand": "echo \"hello world\"",
+    "containerImage": "alpine:latest",
+    "runAt": {
+      "second": 0,
+      "minute": 0,
+      "hour": 0,
+      "date": 1,
+      "month": 1,
+      "year": 2023,
+      "_id": "6458af169d976d6e08123419"
+    },
+    "status": "Succeeded",
+    "containerId": "c78bf7c6178a739ac0ba24ffc74ba230f21758ad846aa0afe15e7f2d900de1c8"
   },
   ...
 ]
