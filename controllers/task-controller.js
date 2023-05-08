@@ -28,9 +28,7 @@ class TaskController {
         .populate("repo additionalFiles user", "-__v")
         .select("-__v");
       if (!task) {
-        return res.status(404).json({
-          message: "Task not found",
-        });
+        throw { name: "TaskNotFound" };
       }
       res.status(200).json(task);
     } catch (err) {
