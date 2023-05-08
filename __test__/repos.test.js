@@ -75,6 +75,14 @@ afterAll(async () => {
 });
 
 describe('POST /repos', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .post('/repos')
+      .send(repo1);
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
   it(`should respond with the message "Repo successfully added" and should return the ObjectId of the newly added repo`, async () => {
     const res = await request(app)
       .post('/repos')
@@ -125,6 +133,13 @@ describe('POST /repos', () => {
 });
 
 describe('GET /repos', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .get('/repos');
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
   it(`should respond with the list of repos in the logged-in user's watchlist`, async () => {
     const res = await request(app)
       .get('/repos')
