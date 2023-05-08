@@ -35,6 +35,17 @@ function errorHandler(err, req, res, next) {
       message: "Task not yet started",
     });
   }
+  if (err.name === "TaskFail") {
+    return res.status(400).json({
+      message: "Task fail",
+    });
+  }
+  if (err.name === "TaskStillRunning") {
+    return res.status(400).json({
+      message: "Task is still running",
+    });
+  }
+
   console.error(err);
   res.status(500).json({
     message: "Internal server error",
