@@ -258,3 +258,28 @@ describe('GET /tasks', () => {
     expect(res.body[0]).toHaveProperty('_id', taskId);
   });
 });
+
+describe('GET /tasks/:id', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .get('/tasks/645906542b43a050936c3bde'); // this is a valid, randomly generated ObjectId
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
+  it(`should respond with the error message "Task not found"`, async () => {
+    const res = await request(app)
+      .get('/tasks/645906542b43a050936c3bde') // this is a valid, randomly generated ObjectId
+      .set('access_token', access_token);
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('message', 'Task not found');
+  });
+
+  it(`should respond with the newly added task's data`, async () => {
+    const res = await request(app)
+      .get(`/tasks/${taskId}`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('_id', taskId);
+  });
+});
