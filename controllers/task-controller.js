@@ -103,11 +103,7 @@ class TaskController {
         image = await client.images().inspect(split[0]);
       }
 
-      if (
-        !image.RepoTags.find((el) => {
-          el.includes(split[1]);
-        })
-      ) {
+      if (!image.RepoTags.find((el) => el.includes(split[1]))) {
         const response = await client.images().create(options);
         // console.log(response);
       }
