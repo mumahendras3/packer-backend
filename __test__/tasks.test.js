@@ -28,6 +28,8 @@ const repo2 = {
 
 // For storing access token
 let access_token;
+// For storing the newly added task's id for further use in this test
+let taskId;
 
 // Mock the axios module
 jest.mock('axios');
@@ -92,6 +94,12 @@ const harborMasterMockRespSuccessImageCheck = {
 const harborMasterMockRespSuccessCreateContainer = {
   Id: 'some-random-id'
 };
+// Container started successfully
+const harborMasterMockRespSuccessStartContainer = {
+  response: {
+    statusCode: 204
+  }
+};
 // Register these mock responses (these order of invocation corresponds
 // with the order of function invocation at test time, including inside `app`)
 client.images.mockReturnValueOnce({
@@ -102,6 +110,14 @@ client.images.mockReturnValueOnce({
 client.containers.mockReturnValueOnce({
   async create() {
     return harborMasterMockRespSuccessCreateContainer;
+  }
+});
+client.containers.mockReturnValueOnce({
+  async start() {
+    // Using throw here as a workaround for a harbor master bug, where a successful starting
+    // of a container will actually result in a throwed success response as returned by the
+    // Docker Engine
+    throw harborMasterMockRespSuccessStartContainer
   }
 });
 
@@ -159,6 +175,8 @@ describe(`POST /tasks`, () => {
       containerId: harborMasterMockRespSuccessCreateContainer.Id
     });
     expect(res.body).toHaveProperty('id', task._id.toString());
+    // Save this task's id for further use
+    taskId = res.body.id;
   });
 
   it(`should respond with the error message "Repo is required"`, async () => {
@@ -195,5 +213,30 @@ describe(`POST /tasks`, () => {
       .send({ ...task1, containerImage: null });
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty('message', 'Container Image is required');
+  });
+});
+
+describe('POST /tasks/:id', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .post(`/tasks/${taskId}`);
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
+  it(`should respond with the error message "Task not found"`, async () => {
+    const res = await request(app)
+      .post('/tasks/645906542b43a050936c3bde') // this is a valid, randomly generated ObjectId
+      .set('access_token', access_token);
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('message', 'Task not found');
+  });
+
+  it(`should respond with a status code of 204 and an empty response body`, async () => {
+    const res = await request(app)
+      .post(`/tasks/${taskId}`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(204);
+    expect(res.body).toStrictEqual({});
   });
 });
