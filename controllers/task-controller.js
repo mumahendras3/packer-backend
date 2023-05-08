@@ -21,6 +21,23 @@ class TaskController {
     }
   }
 
+  static async getTaskById(req, res, next) {
+    try {
+      const { id } = req.params;
+      const task = await Task.findById(id)
+        .populate("repo additionalFiles user", "-__v")
+        .select("-__v");
+      if (!task) {
+        return res.status(404).json({
+          message: "Task not found",
+        });
+      }
+      res.status(200).json(task);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async searchDockerHubImage(req, res, next) {
     try {
       const { filter } = req.body;

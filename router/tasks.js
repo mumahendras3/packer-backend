@@ -4,6 +4,7 @@ const router = require("express").Router();
 router.get("/", TaskController.listTasks);
 router.post("/", TaskController.addTask);
 router.get("/search", TaskController.searchDockerHubImage);
+router.get("/:id", TaskController.getTaskById);
 router.post("/:id", TaskController.startTask);
 router.delete("/:id", TaskController.deleteTask);
 router.get("/:id/status", TaskController.checkTask);
