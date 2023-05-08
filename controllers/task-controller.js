@@ -130,7 +130,7 @@ class TaskController {
         url = `http://${process.env.DOCKER_REMOTE_HOST}:${process.env.DOCKER_REMOTE_PORT}`;
       } else {
         url = "http:/.";
-        socketPath = process.env.DOCKER_ENGINE_URL;
+        socketPath = process.env.DOCKER_UNIX_SOCKET;
       }
 
       const axiosOptions = {
