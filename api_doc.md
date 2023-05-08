@@ -627,48 +627,49 @@ Response:
 {
   "message": "Repository successfully removed from the watch list",
   "removedRepo": {
-    "_id": "642dc37cc80eb6212d262d78",
+    "_id": "64589b586b5f79b0b7d889e5",
     "name": "Mailspring",
     "ownerName": "Foundry376",
     "latestReleaseAssets": [
       {
         "name": "mailspring-1.10.8-0.1.x86_64.rpm",
         "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/mailspring-1.10.8-0.1.x86_64.rpm",
-        "_id": "642dc37cc80eb6212d262d79"
+        "_id": "64589b586b5f79b0b7d889e6"
       },
       {
         "name": "mailspring-1.10.8-amd64.deb",
         "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/mailspring-1.10.8-amd64.deb",
-        "_id": "642dc37cc80eb6212d262d7a"
+        "_id": "64589b586b5f79b0b7d889e7"
       },
       {
         "name": "Mailspring-1.10.8-full.nupkg",
         "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring-1.10.8-full.nupkg",
-        "_id": "642dc37cc80eb6212d262d7b"
+        "_id": "64589b586b5f79b0b7d889e8"
       },
       {
         "name": "Mailspring-AppleSilicon.zip",
         "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring-AppleSilicon.zip",
-        "_id": "642dc37cc80eb6212d262d7c"
+        "_id": "64589b586b5f79b0b7d889e9"
       },
       {
         "name": "Mailspring.zip",
         "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/Mailspring.zip",
-        "_id": "642dc37cc80eb6212d262d7d"
+        "_id": "64589b586b5f79b0b7d889ea"
       },
       {
         "name": "MailspringSetup.exe",
         "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/MailspringSetup.exe",
-        "_id": "642dc37cc80eb6212d262d7e"
+        "_id": "64589b586b5f79b0b7d889eb"
       },
       {
         "name": "RELEASES",
         "url": "https://github.com/Foundry376/Mailspring/releases/download/1.10.8/RELEASES",
-        "_id": "642dc37cc80eb6212d262d7f"
+        "_id": "64589b586b5f79b0b7d889ec"
       }
     ],
     "currentVersion": "1.10.8",
-    "latestVersion": "1.10.8"
+    "latestVersion": "1.10.8",
+    "ownerAvatar": "https://avatars.githubusercontent.com/u/1065759?v=4"
   }
 }
 ```
