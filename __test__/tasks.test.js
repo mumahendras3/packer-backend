@@ -240,3 +240,21 @@ describe('POST /tasks/:id', () => {
     expect(res.body).toStrictEqual({});
   });
 });
+
+describe('GET /tasks', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .get('/tasks');
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
+  it(`should respond with all the tasks that the authenticated user has added`, async () => {
+    const res = await request(app)
+      .get('/tasks')
+      .set('access_token', access_token);
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body[0]).toHaveProperty('_id', taskId);
+  });
+});
