@@ -73,4 +73,36 @@ describe('POST /login', () => {
     expect(res.body).toHaveProperty('email', user1.email);
     expect(res.body).toHaveProperty('name', user1.name);
   });
+
+  it(`should respond with the error message "Email is required"`, async () => {
+    const res = await request(app)
+      .post('/login')
+      .send({ password: user1.password });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Email is required');
+  });
+
+  it(`should respond with the error message "Password is required"`, async () => {
+    const res = await request(app)
+      .post('/login')
+      .send({ email: user1.email });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Password is required');
+  });
+
+  it(`should respond with the error message "Invalid email/password"`, async () => {
+    const res = await request(app)
+      .post('/login')
+      .send({ email: user1.email, password: '55' });
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid email/password');
+  });
+
+  it(`should respond with the error message "Invalid email/password"`, async () => {
+    const res = await request(app)
+      .post('/login')
+      .send({ email: 'mb@b.com', password: user1.password });
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid email/password');
+  });
 });
