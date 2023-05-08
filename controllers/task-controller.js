@@ -141,7 +141,7 @@ class TaskController {
         filesToUpload
       );
       const file = await fs.readFile(`files/for-${container.Id}.tgz`);
-      let url = process.env.DOCKER_ENGINE_URL;
+      let url;
       let socketPath = null;
       if (process.env.DOCKER_REMOTE_HOST && process.env.DOCKER_REMOTE_PORT) {
         url = `http://${process.env.DOCKER_REMOTE_HOST}:${process.env.DOCKER_REMOTE_PORT}`;
@@ -201,6 +201,15 @@ class TaskController {
               task.status = "Running";
               await task.save();
             }
+            if (inspect.State.Status === "exited") {
+              if (inspect.State.ExitCode === 0) {
+                task.status = "Succeeded";
+                await task.save();
+              } else {
+                task.status = "Failed";
+                await task.save();
+              }
+            }
             // // console.log(container);
             // console.log(user.email, "<<email user");
             nodeMailer(
@@ -225,8 +234,55 @@ class TaskController {
   static async downloadOutput(req, res, next) {
     try {
       const { id } = req.params;
+      const task = await Task.findById(id);
+      if (!task) throw { name: "TaskNotFound" };
+      if (task.status === "Created") {
+        throw {
+          name: "TaskNotStarted",
+        };
+      }
+      if (task.status === "Failed") {
+        throw {
+          name: "TaskFail",
+        };
+      }
+      if (task.status === "Running") {
+        throw {
+          name: "TaskStillRunning",
+        };
+      }
+      let url;
+      let socketPath = null;
+      if (process.env.DOCKER_REMOTE_HOST && process.env.DOCKER_REMOTE_PORT) {
+        url = `http://${process.env.DOCKER_REMOTE_HOST}:${process.env.DOCKER_REMOTE_PORT}`;
+      } else {
+        url = "http:/.";
+        socketPath = process.env.DOCKER_UNIX_SOCKET;
+      }
+
+      const axiosOptions = {
+        // method: "PUT",
+        method: "GET",
+        url: `${url}/containers/${
+          task.containerId
+        }/archive?path=${encodeURIComponent("task/output")}`,
+        // url: `${url}/containers/json`,
+        headers: {
+          "Content-Type": "application/x-tar",
+        },
+        socketPath,
+      };
+      // console.log(axiosOptions);
+      const { data } = await axios(axiosOptions);
+      res.set({
+        "Content-Type": "application/x-tar",
+        "Content-Disposition": `attachment; filename="${task._id}-build-output.tar"`,
+      });
+      console.log(data, "<Data download");
+      res.send(data);
     } catch (err) {
       console.log(err);
+      next(err);
     }
   }
 
