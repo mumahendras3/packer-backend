@@ -22,7 +22,7 @@ function nodeMailer(to, subject, html) {
     html
   };
 
-  transporter.sendMail(options, function (err, info) {
+  return transporter.sendMail(options, function (err, info) {
     if (err) {
       console.log(err);
     } else {

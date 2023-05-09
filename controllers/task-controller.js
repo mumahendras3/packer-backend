@@ -394,7 +394,7 @@ class TaskController {
         cleaning += newDate + content + "\n";
       }
       console.log(cleaning, "<<bersih");
-      res.send(cleaning);
+      res.status(200).json(cleaning);
     } catch (err) {
       next(err);
     }
