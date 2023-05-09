@@ -25,6 +25,7 @@ const repo2 = {
   name: 'repo2',
   ownerName: 'ownerRepo2'
 };
+const logMessage1 = 'some logs'
 
 // For storing access token
 let access_token;
@@ -128,6 +129,7 @@ const harborMasterMockRespSuccessStartContainer = {
     statusCode: 204
   }
 };
+// Searching for images on Docker Hub
 const harborMasterMockRespSearchImagesOnDockerHub = [{
   "star_count": 1,
   "is_official": true,
@@ -135,6 +137,8 @@ const harborMasterMockRespSearchImagesOnDockerHub = [{
   "is_automated": false,
   "description": "description1"
 }];
+// Getting container logs
+const harborMasterMockRespGetLogs = `,2023-05-08T08:22:31.943853749Z ${logMessage1}\n`;
 // Register these mock responses (these order of invocation corresponds
 // with the order of function invocation at test time, including inside `app`)
 client.images.mockReturnValueOnce({
@@ -158,6 +162,19 @@ client.containers.mockReturnValueOnce({
 client.images.mockReturnValueOnce({
   async search() {
     return harborMasterMockRespSearchImagesOnDockerHub;
+  }
+});
+// This might need to be removed later when we clean up the server code from
+// unused statements
+client.containers.mockReturnValueOnce({
+  async inspect() {
+    return;
+  }
+});
+// For simulating container logs
+client.containers.mockReturnValueOnce({
+  async logs() {
+    return harborMasterMockRespGetLogs;
   }
 });
 
@@ -443,5 +460,46 @@ describe('GET /tasks/:id/status', () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('_id', taskId);
     expect(res.body).toHaveProperty('status', 'Succeeded');
+  });
+});
+
+describe(`GET /tasks/:id/logs`, () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .get('/tasks/645906542b43a050936c3bde/logs'); // this is a valid, randomly generated ObjectId
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
+  it(`should respond with the error message "Task not found"`, async () => {
+    const res = await request(app)
+      .get('/tasks/645906542b43a050936c3bde/logs') // this is a valid, randomly generated ObjectId
+      .set('access_token', access_token);
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('message', 'Task not found');
+  });
+
+  it(`should respond with the error message "Task not yet started"`, async () => {
+    // Simulate not-started-yet task
+    const task = await Task.findById(taskId);
+    task.status = 'Created';
+    await task.save();
+    const res = await request(app)
+      .get(`/tasks/${taskId}/logs`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('message', 'Task not yet started');
+  });
+
+  it(`should respond with the logs of the container associated with the given task id`, async () => {
+    // Only from started containers we can get the logs
+    const task = await Task.findById(taskId);
+    task.status = 'Succeeded';
+    await task.save();
+    const res = await request(app)
+      .get(`/tasks/${taskId}/logs`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(200);
+    expect(res.body).toBe(`08/05/2023 15:22:31 ${logMessage1}\n`);
   });
 });
