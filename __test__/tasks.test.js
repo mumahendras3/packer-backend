@@ -153,6 +153,21 @@ client.containers.mockReturnValueOnce({
 });
 client.containers.mockReturnValueOnce({
   async start() {
+    throw harborMasterMockRespSuccessStartContainer;
+  }
+});
+client.containers.mockReturnValueOnce({
+  async inspect() {
+    return {
+      State: {
+        Status: 'running'
+      }
+    };
+  }
+});
+
+client.containers.mockReturnValueOnce({
+  async start() {
     // Using throw here as a workaround for a harbor master bug, where a successful starting
     // of a container will actually result in a throwed success response as returned by the
     // Docker Engine
@@ -176,6 +191,12 @@ client.containers.mockReturnValueOnce({
   async logs() {
     return harborMasterMockRespGetLogs;
   }
+});
+
+// Mocking scheduleJob method from node-schedule
+schedule.scheduleJob.mockImplementation((runAt, cb) => {
+  // Instead of scheduling for later execution, run the function immediately
+  return cb()
 });
 
 beforeAll(async () => {
