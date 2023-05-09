@@ -76,6 +76,9 @@ class TaskController {
         runAt,
       });
 
+      // Validate this newly created task first before continuing further
+      await task.validate();
+
       const opt = {
         filters: {
           reference: [task.containerImage],
