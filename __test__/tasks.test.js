@@ -201,7 +201,6 @@ afterAll(async () => {
     releaseAsset: task1.releaseAsset,
     runCommand: task1.runCommand,
     containerImage: task1.containerImage,
-    status: 'Created',
     containerId: harborMasterMockRespSuccessCreateContainer.Id
   });
   await mongoose.connection.close();
@@ -501,5 +500,36 @@ describe(`GET /tasks/:id/logs`, () => {
       .set('access_token', access_token);
     expect(res.status).toBe(200);
     expect(res.body).toBe(`08/05/2023 15:22:31 ${logMessage1}\n`);
+  });
+});
+
+describe('DELETE /tasks/:id', () => {
+  it(`should respond with the error message "Invalid token"`, async () => {
+    const res = await request(app)
+      .delete('/tasks/645906542b43a050936c3bde'); // this is a valid, randomly generated ObjectId
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty('message', 'Invalid token');
+  });
+
+  it(`should respond with the error message "Task not found"`, async () => {
+    const res = await request(app)
+      .delete('/tasks/645906542b43a050936c3bde') // this is a valid, randomly generated ObjectId
+      .set('access_token', access_token);
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('message', 'Task not found');
+  });
+
+  it(`should respond with the message "Task successfully deleted" and the removed task's data`, async () => {
+    const res = await request(app)
+      .delete(`/tasks/${taskId}`)
+      .set('access_token', access_token);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('message', 'Task successfully deleted');
+    expect(res.body).toHaveProperty('removedTask');
+    expect(res.body.removedTask).toHaveProperty('_id', taskId);
+    expect(res.body.removedTask).toHaveProperty('releaseAsset', task1.releaseAsset)
+    expect(res.body.removedTask).toHaveProperty('runCommand', task1.runCommand)
+    expect(res.body.removedTask).toHaveProperty('containerImage', task1.containerImage)
+    expect(res.body.removedTask).toHaveProperty('containerId', harborMasterMockRespSuccessCreateContainer.Id)
   });
 });
