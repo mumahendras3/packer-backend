@@ -87,14 +87,6 @@ const mockRespGetContainerStatusSucceeded = {
     }
   }
 };
-// Register these mock responses (these order of invocation corresponds
-// with the order of axios request that will be executed at test time)
-axios.mockResolvedValueOnce(mockRespGetVersion);
-axios.mockResolvedValueOnce(mockRespGetAvatarUrl);
-axios.mockResolvedValueOnce(mockRespPutArchive);
-axios.mockResolvedValueOnce(mockRespGetBuildOutput);
-axios.mockResolvedValueOnce(mockRespGetContainerStatusFailed);
-axios.mockResolvedValueOnce(mockRespGetContainerStatusSucceeded);
 
 // Testing data
 const task1 = {
@@ -114,10 +106,15 @@ const task1 = {
 };
 
 // The mock responses for when hitting Docker Engine APIs through harbor master
-// All success route
 // Image can be found locally
 const harborMasterMockRespSuccessImageCheck = {
   RepoTags: [task1.containerImage.split(':')[1]]
+};
+// Container is running
+const harborMasterMockRespContainerRunning = {
+  State: {
+    Status: 'running'
+  }
 };
 // Container created successfully
 const harborMasterMockRespSuccessCreateContainer = {
@@ -139,67 +136,12 @@ const harborMasterMockRespSearchImagesOnDockerHub = [{
 }];
 // Getting container logs
 const harborMasterMockRespGetLogs = `,2023-05-08T08:22:31.943853749Z ${logMessage1}\n`;
-// Register these mock responses (these order of invocation corresponds
-// with the order of function invocation at test time, including inside `app`)
-client.images.mockReturnValueOnce({
-  async inspect() {
-    return harborMasterMockRespSuccessImageCheck;
-  }
-});
-client.containers.mockReturnValueOnce({
-  async create() {
-    return harborMasterMockRespSuccessCreateContainer;
-  }
-});
-client.containers.mockReturnValueOnce({
-  async start() {
-    throw harborMasterMockRespSuccessStartContainer;
-  }
-});
-client.containers.mockReturnValueOnce({
-  async inspect() {
-    return {
-      State: {
-        Status: 'running'
-      }
-    };
-  }
-});
-
-client.containers.mockReturnValueOnce({
-  async start() {
-    // Using throw here as a workaround for a harbor master bug, where a successful starting
-    // of a container will actually result in a throwed success response as returned by the
-    // Docker Engine
-    throw harborMasterMockRespSuccessStartContainer;
-  }
-});
-client.images.mockReturnValueOnce({
-  async search() {
-    return harborMasterMockRespSearchImagesOnDockerHub;
-  }
-});
-// This might need to be removed later when we clean up the server code from
-// unused statements
-client.containers.mockReturnValueOnce({
-  async inspect() {
-    return;
-  }
-});
-// For simulating container logs
-client.containers.mockReturnValueOnce({
-  async logs() {
-    return harborMasterMockRespGetLogs;
-  }
-});
-
-// Mocking scheduleJob method from node-schedule
-schedule.scheduleJob.mockImplementation((runAt, cb) => {
-  // Instead of scheduling for later execution, run the function immediately
-  return cb()
-});
 
 beforeAll(async () => {
+  // Mocking calls to axios
+  axios.mockResolvedValueOnce(mockRespGetVersion);
+  axios.mockResolvedValueOnce(mockRespGetAvatarUrl);
+
   // Insert the temporary user
   const user = new User(user3);
   await user.save();
@@ -237,6 +179,40 @@ describe(`POST /tasks`, () => {
   });
 
   it(`should respond with the message "Task successfully added" and the newly added task's id`, async () => {
+    // Reset mocked functions first
+    jest.resetAllMocks();
+
+    // Mocking calls to harbor-master
+    client.images.mockReturnValueOnce({
+      async inspect() {
+        return harborMasterMockRespSuccessImageCheck;
+      }
+    });
+    client.containers.mockReturnValueOnce({
+      async create() {
+        return harborMasterMockRespSuccessCreateContainer;
+      }
+    });
+    client.containers.mockReturnValueOnce({
+      async start() {
+        throw harborMasterMockRespSuccessStartContainer;
+      }
+    });
+    client.containers.mockReturnValueOnce({
+      async inspect() {
+        return harborMasterMockRespContainerRunning;
+      }
+    });
+
+    // Mocking calls to axios
+    axios.mockResolvedValueOnce(mockRespPutArchive);
+
+    // Mocking calls to node-schedule
+    schedule.scheduleJob.mockImplementation((runAt, cb) => {
+      // Instead of scheduling for later execution, run the function immediately
+      return cb();
+    });
+
     const res = await request(app)
       .post('/tasks')
       .set('access_token', access_token)
@@ -248,7 +224,6 @@ describe(`POST /tasks`, () => {
       releaseAsset: task1.releaseAsset,
       runCommand: task1.runCommand,
       containerImage: task1.containerImage,
-      status: 'Created',
       containerId: harborMasterMockRespSuccessCreateContainer.Id
     });
     expect(res.body).toHaveProperty('id', task._id.toString());
@@ -310,6 +285,16 @@ describe('POST /tasks/:id', () => {
   });
 
   it(`should respond with a status code of 204 and an empty response body`, async () => {
+    // Reset mocked functions first
+    jest.resetAllMocks();
+
+    // Mocking calls to harbor-master
+    client.containers.mockReturnValueOnce({
+      async start() {
+        throw harborMasterMockRespSuccessStartContainer;
+      }
+    });
+
     const res = await request(app)
       .post(`/tasks/${taskId}`)
       .set('access_token', access_token);
@@ -371,6 +356,16 @@ describe('POST /tasks/search', () => {
   });
 
   it(`should respond with the container image search results from Docker Hub`, async () => {
+    // Reset mocked functions first
+    jest.resetAllMocks();
+
+    // Mocking calls to harbor-master
+    client.images.mockReturnValueOnce({
+      async search() {
+        return harborMasterMockRespSearchImagesOnDockerHub;
+      }
+    });
+
     const res = await request(app)
       .post('/tasks/search')
       .set('access_token', access_token)
@@ -433,6 +428,12 @@ describe('GET /tasks/:id/download', () => {
   });
 
   it(`should respond with a tar archive of /task/output contents that the client can download`, async () => {
+    // Reset mocked functions first
+    jest.resetAllMocks();
+
+    // Mocking calls to axios
+    axios.mockResolvedValueOnce(mockRespGetBuildOutput);
+
     // Simulating a successful task
     const task = await Task.findById(taskId);
     task.status = 'Succeeded';
@@ -465,6 +466,12 @@ describe('GET /tasks/:id/status', () => {
   });
 
   it(`should respond with the data of the task in question with its status updated to the correct value "Failed"`, async () => {
+    // Reset mocked functions first
+    jest.resetAllMocks();
+
+    // Mocking calls to axios
+    axios.mockResolvedValueOnce(mockRespGetContainerStatusFailed);
+
     const res = await request(app)
       .get(`/tasks/${taskId}/status`)
       .set('access_token', access_token);
@@ -474,6 +481,12 @@ describe('GET /tasks/:id/status', () => {
   });
 
   it(`should respond with the data of the task in question with its status updated to the correct value "Succeeded"`, async () => {
+    // Reset mocked functions first
+    jest.resetAllMocks();
+
+    // Mocking calls to axios
+    axios.mockResolvedValueOnce(mockRespGetContainerStatusSucceeded);
+
     const res = await request(app)
       .get(`/tasks/${taskId}/status`)
       .set('access_token', access_token);
@@ -512,6 +525,21 @@ describe(`GET /tasks/:id/logs`, () => {
   });
 
   it(`should respond with the logs of the container associated with the given task id`, async () => {
+    // Reset mocked functions first
+    jest.resetAllMocks();
+
+    // Mocking calls harbor-master
+    client.containers.mockReturnValueOnce({
+      async inspect() {
+        return;
+      }
+    });
+    client.containers.mockReturnValueOnce({
+      async logs() {
+        return harborMasterMockRespGetLogs;
+      }
+    });
+
     // Only from started containers we can get the logs
     const task = await Task.findById(taskId);
     task.status = 'Succeeded';
