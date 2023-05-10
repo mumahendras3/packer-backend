@@ -1,9 +1,24 @@
 const TaskController = require("../controllers/task-controller");
+const multer = require("multer");
+const addtional = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "files");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+const additionalUploaded = multer({ storage: addtional });
+
 const router = require("express").Router();
 
 router.get("/", TaskController.listTasks);
-router.post("/", TaskController.addTask);
-router.post("/search", TaskController.searchDockerHubImage);
+router.post(
+  "/",
+  additionalUploaded.array("additionalFiles"),
+  TaskController.addTask
+);
+router.get("/search", TaskController.searchDockerHubImage);
 router.get("/:id", TaskController.getTaskById);
 router.post("/:id", TaskController.startTask);
 router.delete("/:id", TaskController.deleteTask);
