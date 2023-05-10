@@ -104,16 +104,42 @@ const task1 = {
     year: 2023
   }
 };
+const task2 = {
+  repo: '', // will be updated to the right value in `beforeAll()`
+  releaseAsset: mockRespGetVersion.data.assets[0].name,
+  runCommand: 'runCommand2',
+  containerImage: 'containerImage2:tag2',
+  additionalFiles: [], // will be updated to the right value in `beforeAll()`,
+  runAt: {
+    second: 0,
+    minute: 0,
+    hour: 0,
+    date: 1,
+    month: 2,
+    year: 2023
+  }
+};
 
 // The mock responses for when hitting Docker Engine APIs through harbor master
 // Image can be found locally
 const harborMasterMockRespSuccessImageCheck = {
   RepoTags: [task1.containerImage.split(':')[1]]
 };
+// Image can be found locally but the requested tag doesn't exist
+const harborMasterMockRespSuccessImageCheckTagsNotFound = {
+  RepoTags: ['other-tag']
+};
 // Container is running
 const harborMasterMockRespContainerRunning = {
   State: {
     Status: 'running'
+  }
+};
+// Container has exited with exit code != 0
+const harborMasterMockRespContainerExitedSucceeded = {
+  State: {
+    Status: 'exited',
+    ExitCode: 0
   }
 };
 // Container created successfully
@@ -154,6 +180,7 @@ beforeAll(async () => {
     .set('access_token', access_token)
     .send(repo2);
   task1.repo = res.body.id;
+  task2.repo = res.body.id;
 });
 
 afterAll(async () => {
@@ -164,6 +191,12 @@ afterAll(async () => {
     releaseAsset: task1.releaseAsset,
     runCommand: task1.runCommand,
     containerImage: task1.containerImage,
+    containerId: harborMasterMockRespSuccessCreateContainer.Id
+  });
+  await Task.findOneAndDelete({
+    releaseAsset: task2.releaseAsset,
+    runCommand: task2.runCommand,
+    containerImage: task2.containerImage,
     containerId: harborMasterMockRespSuccessCreateContainer.Id
   });
   await mongoose.connection.close();
@@ -229,6 +262,64 @@ describe(`POST /tasks`, () => {
     expect(res.body).toHaveProperty('id', task._id.toString());
     // Save this task's id for further use
     taskId = res.body.id;
+  });
+
+  it(`should respond with the message "Task successfully added" and the newly added task's id (container image's tag not specified)`, async () => {
+    // Reset mocked functions first
+    jest.resetAllMocks();
+
+    // Mocking calls to harbor-master
+    client.images.mockReturnValueOnce({
+      async inspect() {
+        return harborMasterMockRespSuccessImageCheckTagsNotFound;
+      }
+    });
+    client.images.mockReturnValueOnce({
+      async create() {
+        // No response needed
+        return;
+      }
+    });
+    client.containers.mockReturnValueOnce({
+      async create() {
+        return harborMasterMockRespSuccessCreateContainer;
+      }
+    });
+    client.containers.mockReturnValueOnce({
+      async start() {
+        throw harborMasterMockRespSuccessStartContainer;
+      }
+    });
+    client.containers.mockReturnValueOnce({
+      async inspect() {
+        return harborMasterMockRespContainerExitedSucceeded;
+      }
+    });
+
+    // Mocking calls to axios
+    axios.mockResolvedValueOnce(mockRespPutArchive);
+
+    // Mocking calls to node-schedule
+    schedule.scheduleJob.mockImplementation((runAt, cb) => {
+      // Instead of scheduling for later execution, run the function immediately
+      return cb();
+    });
+
+    const res = await request(app)
+      .post('/tasks')
+      .set('access_token', access_token)
+      .send(task2);
+    console.log(res.body, '<<<< please see me');
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('message', 'Task successfully added');
+    // Compare the returned task id with the actual one in the database
+    const task = await Task.findOne({
+      releaseAsset: task2.releaseAsset,
+      runCommand: task2.runCommand,
+      containerImage: task2.containerImage,
+      containerId: harborMasterMockRespSuccessCreateContainer.Id
+    });
+    expect(res.body).toHaveProperty('id', task._id.toString());
   });
 
   it(`should respond with the error message "Repo is required"`, async () => {
