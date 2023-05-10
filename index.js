@@ -21,14 +21,14 @@ schedule.scheduleJob(process.env.REPOS_CHECK_FREQUENCY, async function () {
       const dataGithub = await axios({
         url: repo.githubReleasesEndpoint + "/latest",
       });
-      if (dataGithub.data.name !== repo.latestVersion) { 
+      if (dataGithub.data.name !== repo.latestVersion) {
         repo.latestVersion = dataGithub.data.name;
         repo.latestReleaseAssets = dataGithub.data.assets.map((asset) => ({
           name: asset.name,
           url: asset.browser_download_url,
         }));
         await repo.save();
-        console.log(user.email,"masuk email");
+        console.log(user.email, "masuk email");
         nodeMailer(
           user.email,
           `New Update for ${repo.ownerName}/${repo.name}`,
@@ -93,7 +93,7 @@ schedule.scheduleJob(process.env.TASKS_CHECK_FREQUENCY, async function () {
       $eq: "Running",
     },
   };
-  const task = await Task.find(query);
+  const task = await Task.find(query).populate("user");
 
   for (let i = 0; i < task.length; i++) {
     const idContainer = task[i].containerId;
@@ -108,6 +108,67 @@ schedule.scheduleJob(process.env.TASKS_CHECK_FREQUENCY, async function () {
         await task[i].save();
       }
     }
+    nodeMailer(
+      task.user.email,
+      `Task ${task._id} - ${task.status}`,
+      `<!DOCTYPE html>
+    <html lang="en">
+    
+    <head>
+       <meta charset="UTF-8">
+       <meta http-equiv="X-UA-Compatible" content="IE=edge">
+       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
+       <title>Document</title>
+    </head>
+    
+    <body style="font-family: 'Plus Jakarta Sans', sans-serif; width: 100%;">
+       <div id="paper"
+          style="background-color: white; width: 80%; margin: auto; border: 1px solid rgb(232, 232, 232); padding: 10px;">
+          <div id="header"
+             style="display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; border: 1px solid #F2F2F2; box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.05); border-radius: 10px; margin: 20px; padding: 20px;">
+             <div id="img" style="width: 50%;">
+                <img
+                   src="https://media.discordapp.net/attachments/1079821583255875728/1105074586925682788/Mail_sent-pana.png?width=1030&height=1030"
+                   width="80%" alt="">
+             </div>
+             <div id="title" style="width: 50%;">
+                <h1 style="font-weight: 600; width: 80%;">INFORMATION EMAIL</h1>
+                <hr>
+                <p>Subject:Task Status Update </p>
+                <p>Dear ${task.user.name}</p>
+             </div>
+          </div>
+          <div id="contentEmail" style="padding: 20px;">
+             <p style="font-size: larger;">
+                I would like to inform you that the status of the task with id ${task._id} has been confirmed to be 
+                <span style="background-color: #001462; color: white;">${task.status}</span>. We would like to provide
+                further information regarding the status.
+                <br> <br>
+              For more details please click here 
+                <br> <br>
+                For more information, please visit <span style="background-color: #001462; color: white;"></span> for
+                complete details. Please do not hesitate
+                to contact us
+                if you need further assistance.
+                <br> <br>
+                Thank you
+             </p>
+          </div>
+          <div id="footer" style="background-color: #001462; padding: 15px 20px; border-radius: 10px;">
+             <div id="contentFooter" style="display: flex; align-items: center; justify-content: space-between;">
+                <img
+                   src="https://media.discordapp.net/attachments/1079821583255875728/1105086419648651264/logoWhite.png?width=300&height=70"
+                   alt="">
+                <span style="color: white;">copyright© 2023 by Packer</span>
+             </div>
+          </div>
+       </div>
+    </body>
+    
+    </html>`
+    );
   }
 });
 
