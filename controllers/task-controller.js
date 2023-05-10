@@ -8,6 +8,8 @@ const download = require("../helpers/download");
 const Repo = require("../models/repo");
 const schedule = require("node-schedule");
 const { nodeMailer } = require("../helpers/nodemailer");
+const File = require("../models/file");
+
 class TaskController {
   static async listTasks(req, res, next) {
     try {
@@ -45,7 +47,6 @@ class TaskController {
       const dataFilter = data.filter((el) => {
         return el.name.includes(filter);
       });
-      // console.log(dataFilter);
       res.send(dataFilter);
     } catch (err) {
       console.log(err);
@@ -57,33 +58,34 @@ class TaskController {
     try {
       const { id: userId } = req.loggedInUser;
       console.log(userId);
-      const {
-        repo,
-        releaseAsset,
-        additionalFiles,
-        runCommand,
-        containerImage,
-        runAt,
-      } = req.body;
+      const { repo, releaseAsset, runCommand, containerImage, runAt } =
+        req.body;
 
       const task = new Task({
         user: userId,
         repo,
         releaseAsset,
-        additionalFiles,
         runCommand,
         containerImage,
         runAt,
       });
-
+      //Upload all file variable
       // Validate this newly created task first before continuing further
       await task.validate();
 
-      const opt = {
-        filters: {
-          reference: [task.containerImage],
-        },
-      };
+      const filesToUpload = [task.releaseAsset];
+      //additional Files
+      for (const file of req.files) {
+        const fileEntry = new File({
+          name: file.filename,
+          path: file.path,
+          mimeType: file.mimetype,
+        });
+        await fileEntry.save();
+        task.additionalFiles.push(fileEntry._id);
+        await task.save();
+        filesToUpload.push(fileEntry.name);
+      }
 
       const split = task.containerImage.split(":");
       if (!split[1]) {
@@ -100,7 +102,6 @@ class TaskController {
       let image;
       try {
         image = await client.images().inspect(split[0]);
-        // console.log(image);
       } catch (error) {
         const result = await client.images().create(options);
         image = await client.images().inspect(split[0]);
@@ -108,8 +109,9 @@ class TaskController {
 
       if (!image.RepoTags.find((el) => el.includes(split[1]))) {
         const response = await client.images().create(options);
-        // console.log(response);
       }
+
+      // uploaded addtional files
       const model = {
         Image: task.containerImage,
         Cmd: ["sh", "-c", task.runCommand],
@@ -122,10 +124,7 @@ class TaskController {
       );
       // Download the release asset
       await download(releaseAssetUrl);
-      const filesToUpload = [task.releaseAsset];
-      if (task.additionalFiles.length) {
-        filesToUpload.push(...task.additionalFiles.map((file) => file.name));
-      }
+      console.log(filesToUpload, `ini kah`);
       await tar.c(
         {
           gzip: true,
@@ -157,11 +156,9 @@ class TaskController {
         socketPath,
         data: file,
       };
-      // console.log(axiosOptions);
       const rs = await axios(axiosOptions);
       // Cleanup the file since it's already sent
       await fs.unlink(`files/for-${container.Id}.tgz`);
-
       // console.log(rs);
       task.containerId = container.Id;
       console.log(task.runAt, "<<<run atnya");
@@ -207,8 +204,6 @@ class TaskController {
                 await task.save();
               }
             }
-            // // console.log(container);
-            // console.log(user.email, "<<email user");
             nodeMailer(
               user.email,
               "Task started",
