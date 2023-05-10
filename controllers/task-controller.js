@@ -75,16 +75,18 @@ class TaskController {
 
       const filesToUpload = [task.releaseAsset];
       //additional Files
-      for (const file of req.files) {
-        const fileEntry = new File({
-          name: file.filename,
-          path: file.path,
-          mimeType: file.mimetype,
-        });
-        await fileEntry.save();
-        task.additionalFiles.push(fileEntry._id);
-        await task.save();
-        filesToUpload.push(fileEntry.name);
+      if (req.files) {
+        for (const file of req.files) {
+          const fileEntry = new File({
+            name: file.filename,
+            path: file.path,
+            mimeType: file.mimetype,
+          });
+          await fileEntry.save();
+          task.additionalFiles.push(fileEntry._id);
+          await task.save();
+          filesToUpload.push(fileEntry.name);
+        }
       }
 
       const split = task.containerImage.split(":");
@@ -146,9 +148,8 @@ class TaskController {
       const axiosOptions = {
         method: "PUT",
         // method: "GET",
-        url: `${url}/containers/${
-          container.Id
-        }/archive?path=${encodeURIComponent("task")}`,
+        url: `${url}/containers/${container.Id
+          }/archive?path=${encodeURIComponent("task")}`,
         // url: `${url}/containers/json`,
         headers: {
           "Content-Type": "application/x-tar",
@@ -308,9 +309,8 @@ class TaskController {
       const axiosOptions = {
         // method: "PUT",
         method: "GET",
-        url: `${url}/containers/${
-          task.containerId
-        }/archive?path=${encodeURIComponent("task/output")}`,
+        url: `${url}/containers/${task.containerId
+          }/archive?path=${encodeURIComponent("task/output")}`,
         // url: `${url}/containers/json`,
         headers: {
           "Content-Type": "application/x-tar",
