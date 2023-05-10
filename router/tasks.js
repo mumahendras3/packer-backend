@@ -18,7 +18,7 @@ router.post(
   additionalUploaded.array("additionalFiles"),
   TaskController.addTask
 );
-router.get("/search", TaskController.searchDockerHubImage);
+router.post("/search", TaskController.searchDockerHubImage);
 router.get("/:id", TaskController.getTaskById);
 router.post("/:id", TaskController.startTask);
 router.delete("/:id", TaskController.deleteTask);
