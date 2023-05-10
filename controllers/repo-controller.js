@@ -1,6 +1,7 @@
 const { default: axios } = require("axios");
 const Repo = require("../models/repo");
 const User = require("../models/user");
+const Task = require('../models/task');
 
 class RepoController {
   static async listRepos(req, res, next) {
@@ -137,6 +138,7 @@ class RepoController {
       const repo = await Repo.findByIdAndDelete(id).select('-__v');
       if (!repo)
         throw { name: 'RepoNotFound' };
+      await Task.deleteMany({ repo: repo.id });
       // Get the logged-in user's watch list
       const user = await User.findById(userId).select('watchList');
       // Also remove this repo from the user's watch list
