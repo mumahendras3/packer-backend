@@ -171,10 +171,13 @@ class TaskController {
         console.log({ year, month: month - 1, date, hour, minute, second });
         const dates = new Date(year, month - 1, date, hour, minute, second);
         console.log(dates);
+        task.status = "Scheduled";
+        await task.save();
         schedule.scheduleJob(dates, async function () {
           // console.log("masuk");
           try {
             // console.log("masuk sini");
+
             console.log(task.containerId, "<<<<<");
             await new Promise(async (resolve, reject) => {
               try {
@@ -272,10 +275,11 @@ class TaskController {
         "Content-Type": "application/x-tar",
         "Content-Disposition": `attachment; filename="${task._id}-build-output.tar"`,
       });
-      console.log(data, "<Data download");
+      console.log(data.response, "<Data download");
+
       res.send(data);
     } catch (err) {
-      console.log(err);
+      console.log(err, "<<eror");
       next(err);
     }
   }
