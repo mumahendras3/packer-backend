@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --coverage",
-    "dev": "npx nodemon index.js"
+    "dev": "npx nodemon --ignore 'files/*' index.js"
   },
   "author": "mumahendras3",
   "license": "ISC",
