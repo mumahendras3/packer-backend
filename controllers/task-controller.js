@@ -328,7 +328,7 @@ class TaskController {
       response.data.pipe(writer);
       writer.on("finish", async () => {
         res.download(filePath);
-        await fs.unlink(filePath);
+        // await fs.unlink(filePath);
       });
       writer.on("error", () => {
         throw new Error(
