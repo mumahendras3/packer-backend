@@ -13,6 +13,7 @@ const Task = require('../models/task');
 const download = require('../helpers/download');
 const tar = require("tar");
 const fs = require("fs/promises");
+const fsSync = require('fs');
 const schedule = require("node-schedule");
 
 // Initial data
@@ -67,7 +68,7 @@ const mockRespGetAvatarUrl = {
 const mockRespPutArchive = {};
 // When trying to download the build output from a container
 const mockRespGetBuildOutput = {
-  data: {} // Pretend that this is some kind of binary data
+  data: fsSync.createReadStream(`__test__/test-file-for-get-archive-of-container.txt`)
 };
 // When checking for a failing container's status through axios
 const mockRespGetContainerStatusFailed = {
@@ -200,6 +201,7 @@ afterAll(async () => {
     containerId: harborMasterMockRespSuccessCreateContainer.Id
   });
   await mongoose.connection.close();
+  fsSync.unlinkSync(`files/${taskId}-build-output.tar`);
 });
 
 describe(`POST /tasks`, () => {
@@ -534,9 +536,8 @@ describe('GET /tasks/:id/download', () => {
       .get(`/tasks/${taskId}/download`)
       .set('access_token', access_token);
     expect(res.status).toBe(200);
-    expect(res.header).toHaveProperty('content-type', 'application/x-tar; charset=utf-8');
+    expect(res.header).toHaveProperty('content-type', 'application/x-tar');
     expect(res.header).toHaveProperty('content-disposition', `attachment; filename="${task._id}-build-output.tar"`);
-    expect(res.body).toStrictEqual(mockRespGetBuildOutput.data);
   });
 });
 

@@ -1,6 +1,7 @@
 const { default: axios } = require("axios");
 const client = require("../config/harbor-master");
 const fs = require("fs/promises");
+const fsSync = require('fs');
 const tar = require("tar");
 const Task = require("../models/task");
 const User = require("../models/user");
@@ -9,6 +10,7 @@ const Repo = require("../models/repo");
 const schedule = require("node-schedule");
 const { nodeMailer } = require("../helpers/nodemailer");
 const File = require("../models/file");
+const path = require('path');
 
 class TaskController {
   static async listTasks(req, res, next) {
@@ -103,10 +105,10 @@ class TaskController {
 
       let image;
       try {
-        image = await client.images().inspect(split[0]);
+        image = await client.images().inspect(encodeURIComponent(task.containerImage));
       } catch (error) {
         const result = await client.images().create(options);
-        image = await client.images().inspect(split[0]);
+        image = await client.images().inspect(encodeURIComponent(task.containerImage));
       }
 
       if (!image.RepoTags.find((el) => el.includes(split[1]))) {
@@ -306,28 +308,26 @@ class TaskController {
         socketPath = process.env.DOCKER_UNIX_SOCKET;
       }
 
+      const fileName = `${task._id}-build-output.tar`;
+      const filePath = path.resolve('files', fileName);
+      const writer = fsSync.createWriteStream(filePath);
       const axiosOptions = {
-        // method: "PUT",
         method: "GET",
         url: `${url}/containers/${task.containerId
           }/archive?path=${encodeURIComponent("task/output")}`,
-        // url: `${url}/containers/json`,
-        headers: {
-          "Content-Type": "application/x-tar",
-        },
+        responseType: 'stream',
         socketPath,
       };
-      // console.log(axiosOptions);
-      const { data } = await axios(axiosOptions);
-      res.set({
-        "Content-Type": "application/x-tar",
-        "Content-Disposition": `attachment; filename="${task._id}-build-output.tar"`,
+      const response = await axios(axiosOptions);
+      response.data.pipe(writer)
+      writer.on('finish', async () => {
+        res.download(filePath);
+        await fs.unlink(filePath);
       });
-      console.log(data.response, "<Data download");
-
-      res.send(data);
+      writer.on('error', () => {
+        throw new Error('Error downloading the build output from the container');
+      });
     } catch (err) {
-      console.log(err, "<<eror");
       next(err);
     }
   }
