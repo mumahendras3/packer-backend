@@ -1,7 +1,7 @@
 const { default: axios } = require("axios");
 const client = require("../config/harbor-master");
 const fs = require("fs/promises");
-const fsSync = require('fs');
+const fsSync = require("fs");
 const tar = require("tar");
 const Task = require("../models/task");
 const User = require("../models/user");
@@ -10,7 +10,7 @@ const Repo = require("../models/repo");
 const schedule = require("node-schedule");
 const { nodeMailer } = require("../helpers/nodemailer");
 const File = require("../models/file");
-const path = require('path');
+const path = require("path");
 
 class TaskController {
   static async listTasks(req, res, next) {
@@ -105,10 +105,14 @@ class TaskController {
 
       let image;
       try {
-        image = await client.images().inspect(encodeURIComponent(task.containerImage));
+        image = await client
+          .images()
+          .inspect(encodeURIComponent(task.containerImage));
       } catch (error) {
         const result = await client.images().create(options);
-        image = await client.images().inspect(encodeURIComponent(task.containerImage));
+        image = await client
+          .images()
+          .inspect(encodeURIComponent(task.containerImage));
       }
 
       if (!image.RepoTags.find((el) => el.includes(split[1]))) {
@@ -150,8 +154,9 @@ class TaskController {
       const axiosOptions = {
         method: "PUT",
         // method: "GET",
-        url: `${url}/containers/${container.Id
-          }/archive?path=${encodeURIComponent("task")}`,
+        url: `${url}/containers/${
+          container.Id
+        }/archive?path=${encodeURIComponent("task")}`,
         // url: `${url}/containers/json`,
         headers: {
           "Content-Type": "application/x-tar",
@@ -309,23 +314,26 @@ class TaskController {
       }
 
       const fileName = `${task._id}-build-output.tar`;
-      const filePath = path.resolve('files', fileName);
+      const filePath = path.resolve("files", fileName);
       const writer = fsSync.createWriteStream(filePath);
       const axiosOptions = {
         method: "GET",
-        url: `${url}/containers/${task.containerId
-          }/archive?path=${encodeURIComponent("task/output")}`,
-        responseType: 'stream',
+        url: `${url}/containers/${
+          task.containerId
+        }/archive?path=${encodeURIComponent("task/output")}`,
+        responseType: "stream",
         socketPath,
       };
       const response = await axios(axiosOptions);
-      response.data.pipe(writer)
-      writer.on('finish', async () => {
+      response.data.pipe(writer);
+      writer.on("finish", async () => {
         res.download(filePath);
         await fs.unlink(filePath);
       });
-      writer.on('error', () => {
-        throw new Error('Error downloading the build output from the container');
+      writer.on("error", () => {
+        throw new Error(
+          "Error downloading the build output from the container"
+        );
       });
     } catch (err) {
       next(err);
@@ -445,7 +453,6 @@ class TaskController {
         const newDate = dates.replace(remove, "");
         cleaning += newDate + content + "\n";
       }
-      console.log(cleaning, "<<bersih");
       res.status(200).json(cleaning);
     } catch (err) {
       next(err);
