@@ -88,7 +88,9 @@ schedule.scheduleJob(process.env.REPOS_CHECK_FREQUENCY, async function () {
 });
 
 schedule.scheduleJob(process.env.TASKS_CHECK_FREQUENCY, async function () {
-  const query = {
+   console.log(new Date(), "Checking for tasks' statuses");
+
+   const query = {
     status: {
       $eq: "Running",
     },
@@ -98,15 +100,13 @@ schedule.scheduleJob(process.env.TASKS_CHECK_FREQUENCY, async function () {
   for (let i = 0; i < task.length; i++) {
     const idContainer = task[i].containerId;
     const inspect = await client.containers().inspect(idContainer);
-    console.log(new Date(), "Check task every 5 min");
     if (inspect.State.Status === "exited") {
       if (inspect.State.ExitCode === 0) {
         task[i].status = "Succeeded";
-        await task[i].save();
       } else {
         task[i].status = "Failed";
-        await task[i].save();
       }
+      await task[i].save();
       nodeMailer(
         task[i].user.email,
         `Task ${task[i]._id} - ${task[i].status}`,
