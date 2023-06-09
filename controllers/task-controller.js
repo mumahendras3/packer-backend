@@ -246,14 +246,12 @@ class TaskController {
                     </div>
                     <div id="contentEmail" style="padding: 20px;">
                        <p style="font-size: larger;">
-                          I We would like to inform you that the following task will start according to the schedule:
+                          We would like to inform you that the following task has been started:
                           <br> <br>
                           Container ID: ${task.containerId} <br>
                           Date: ${dates}
                           <br> <br>
-                          Please prepare yourself and the necessary resources to complete the task according to the scheduled
-                          timeline. If you have any questions or concerns regarding the execution of this task, please feel free to
-                          contact us anytime.
+                          To see the details of the task, click <a href="${process.env.CLIENT_BASE_URL}/task/${task._id}">here</a>.
                           <br> <br>
                           Thank you
                        </p>

@@ -139,11 +139,11 @@ schedule.scheduleJob(process.env.TASKS_CHECK_FREQUENCY, async function () {
                </div>
                <div id="contentEmail" style="padding: 20px;">
                   <p style="font-size: larger;">
-                     I would like to inform you that the status of the task with id ${task[i]._id} has been confirmed to be 
+                     We would like to inform you that the status of the task with id ${task[i]._id} has been confirmed to be 
                      <span style="background-color: #001462; color: white;">${task[i].status}</span>. We would like to provide
                      further information regarding the status.
                      <br> <br>
-                  For more details please click here 
+                     For more details please click <a href="${process.env.CLIENT_BASE_URL}/task/${task[i]._id}">here</a>
                      <br> <br>
                      For more information, please visit <span style="background-color: #001462; color: white;"></span> for
                      complete details. Please do not hesitate
